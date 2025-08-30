@@ -1,32 +1,43 @@
-from fastapi import APIRouter
-from models import Device, ProEvent
-from services.device_service import get_devices, add_device
-from services.proevent_service import get_proevents, add_proevent
-from services.cache_service import get_cache_value, set_cache_value
+from fastapi import APIRouter, HTTPException, Query
+from services import device_service, proevent_service
+from models import DeviceOut, DeviceActionRequest, DeviceActionResponse
+from logger import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
-@router.get("/devices")
-def list_devices():
-    return get_devices()
+@router.get("/devices", response_model=list[DeviceOut])
+def list_devices(state: str | None = Query(default=None, pattern="^(arm|disarm)$")):
+    devices = device_service.get_all_devices(state=state)
+    return [DeviceOut(**d) for d in devices]
 
-@router.post("/devices")
-def create_device(device: Device):
-    return add_device(device)
+@router.post("/devices/action", response_model=DeviceActionResponse)
+def device_action(payload: DeviceActionRequest):
+    device_id, action = payload.device_id, payload.action
+    state = device_service.get_device_state(device_id)
+    if not state:
+        raise HTTPException(404, "Device not found")
 
-@router.get("/proevents")
-def list_proevents():
-    return get_proevents()
+    proevent_id = device_service.get_linked_proevent_id(device_id)
+    if not proevent_id:
+        raise HTTPException(404, "ProEvent not found")
 
-@router.post("/proevents")
-def create_proevent(proevent: ProEvent):
-    return add_proevent(proevent)
+    # Validate state before update
+    if action == "arm" and "AreaArmingStates.4" not in state:
+        return DeviceActionResponse(device_id=device_id, action=action,
+            proevent_id=proevent_id, status="Skipped",
+            message="Device not in 'arm' state")
+    if action == "disarm" and "AreaArmingStates.2" not in state:
+        return DeviceActionResponse(device_id=device_id, action=action,
+            proevent_id=proevent_id, status="Skipped",
+            message="Device not in 'disarm' state")
 
-@router.get("/cache/{key}")
-def read_cache(key: str):
-    return {"value": get_cache_value(key)}
+    reactive = 1 if action == "arm" else 0
+    affected = proevent_service.set_proevent_reactive(proevent_id, reactive)
+    if affected == 0:
+        raise HTTPException(400, "No rows updated")
 
-@router.post("/cache/{key}")
-def write_cache(key: str, value: str):
-    set_cache_value(key, value)
-    return {"status": "success", "key": key, "value": value}
+    return DeviceActionResponse(
+        device_id=device_id, action=action, proevent_id=proevent_id,
+        status="Success", message=f"ProEvent updated (reactive={reactive})"
+    )

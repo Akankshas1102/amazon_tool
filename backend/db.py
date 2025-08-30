@@ -1,27 +1,50 @@
-# JSON is acting as our storage layer, so no DB connection is needed.
-# This is just a placeholder to mimic a database module.
-from config import DEVICES_FILE, PROEVENT_FILE
 import json
 import os
+from config import logger, DEVICES_FILE, PROEVENT_FILE
 
-def _load_json(path):
-    if not os.path.exists(path):
+def load_json(file_path):
+    """Load JSON data from file."""
+    if not os.path.exists(file_path):
+        logger.warning(f"{file_path} not found, creating a new empty file.")
+        save_json(file_path, [])
         return []
-    with open(path, "r") as f:
-        return json.load(f)
+    try:
+        with open(file_path, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        logger.error(f"Corrupted JSON in {file_path}, resetting file.")
+        save_json(file_path, [])
+        return []
 
-def _save_json(path, data):
-    with open(path, "w") as f:
-        json.dump(data, f, indent=4)
+def save_json(file_path, data):
+    """Save data to JSON file."""
+    try:
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
+        logger.info(f"Data successfully saved to {file_path}")
+    except Exception as e:
+        logger.error(f"Error saving to {file_path}: {e}")
 
-def load_devices():
-    return _load_json(DEVICES_FILE)
+# Device functions
+def get_all_devices():
+    return load_json(DEVICES_FILE)
 
-def save_devices(data):
-    _save_json(DEVICES_FILE, data)
+def add_device(device):
+    devices = load_json(DEVICES_FILE)
+    devices.append(device)
+    save_json(DEVICES_FILE, devices)
 
-def load_proevents():
-    return _load_json(PROEVENT_FILE)
+def clear_devices():
+    save_json(DEVICES_FILE, [])
 
-def save_proevents(data):
-    _save_json(PROEVENT_FILE, data)
+# ProEvent functions
+def get_all_proevents():
+    return load_json(PROEVENT_FILE)
+
+def add_proevent(event):
+    events = load_json(PROEVENT_FILE)
+    events.append(event)
+    save_json(PROEVENT_FILE, events)
+
+def clear_proevents():
+    save_json(PROEVENT_FILE, [])

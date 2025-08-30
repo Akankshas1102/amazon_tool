@@ -1,11 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Literal
 
-class Device(BaseModel):
+class DeviceOut(BaseModel):
     id: int
     name: str
-    type: str
+    state: str
 
-class ProEvent(BaseModel):
-    id: int
-    event_name: str
-    description: str
+class DeviceActionRequest(BaseModel):
+    device_id: int = Field(..., gt=0)
+    action: Literal["arm", "disarm"]
+
+class DeviceActionResponse(BaseModel):
+    device_id: int
+    action: Literal["arm", "disarm"]
+    proevent_id: int
+    status: str
+    message: str

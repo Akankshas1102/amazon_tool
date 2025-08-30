@@ -1,11 +1,16 @@
-from db import load_proevents, save_proevents
-from models import ProEvent
+from sqlalchemy import text
+from config import get_db_connection
+from logger import get_logger
 
-def get_proevents():
-    return load_proevents()
+logger = get_logger(__name__)
 
-def add_proevent(proevent: ProEvent):
-    events = load_proevents()
-    events.append(proevent.dict())
-    save_proevents(events)
-    return proevent
+def set_proevent_reactive(proevent_id: int, reactive: int):
+    sql = text("""
+        UPDATE ProEvent_TBL
+        SET pevReactive_FRK = :reactive
+        WHERE pevProEvent_PK = :proevent_id
+    """)
+    with get_db_connection() as conn:
+        result = conn.execute(sql, {"reactive": reactive, "proevent_id": proevent_id})
+        conn.commit()
+        return result.rowcount
