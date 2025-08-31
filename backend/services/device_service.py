@@ -91,4 +91,16 @@ def get_device_state(device_id: int):
     for d in devices:
         if d["id"] == device_id:
             return d["state"]
-    return None 
+    return None
+
+def get_linked_proevent_id(device_id: int):
+    """
+    Retrieves the linked proevent ID for a given device ID.
+    """
+    sql = "SELECT dstProEvent_FRK FROM DeviceStateLink_TBL WHERE dstDevice_FRK = :device_id"
+    params = {"device_id": device_id}
+
+    row = fetch_one(sql, params)
+    if row:
+        return row["dstProEvent_FRK"]
+    return None
