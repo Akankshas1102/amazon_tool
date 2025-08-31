@@ -1,6 +1,8 @@
 from sqlalchemy import text
 from config import get_db_connection
 import logging
+import requests
+from config import fetch_one , fetch_all
 
 
 logger = logging.getLogger(__name__)
@@ -72,3 +74,21 @@ def handle_disarm_event():
             conn.commit()
             return {"status": "success", "message": "DISARM event handled. ProEvents updated."}
     return {"status": "no_action", "message": "No disarmed devices found."}
+
+
+BASE_URL = "http://localhost:8000/api/devices"
+
+def fetch_all_devices():
+    """Call the GET /api/devices endpoint and return JSON"""
+    response = requests.get(BASE_URL)
+    if response.status_code == 200:
+        return response.json()
+    return []
+
+def get_device_state(device_id: int):
+    """Get state of a device by DeviceID from the API"""
+    devices = fetch_all_devices()
+    for d in devices:
+        if d["id"] == device_id:
+            return d["state"]
+    return None 

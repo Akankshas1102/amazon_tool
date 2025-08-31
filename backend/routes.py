@@ -11,10 +11,17 @@ logger = get_logger(__name__)
 @router.get("/devices", response_model=list[DeviceOut])
 def list_devices(state: str | None = Query(default=None)):
     if state:
-        devices = device_service.get_devices_by_state(state)
+        devices = device_service.get_all_devices(state)
     else:
         devices = device_service.get_all_devices()
     return [DeviceOut(**d) for d in devices]
+
+@router.get("/devices/{device_id}/state")
+def get_device_state(device_id: int):
+    state = device_service.get_device_state(device_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return {"device_id": device_id, "state": state}
 
 
 # ✅ POST /devices/action (arm/disarm)

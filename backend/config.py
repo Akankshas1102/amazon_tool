@@ -65,3 +65,25 @@ def get_db_connection():
     finally:
         db.close()
 
+def fetch_one(query: str, params: dict = None):
+    """Fetch a single row."""
+    with engine.connect() as conn:
+        result = conn.execute(text(query), params or {})
+        row = result.fetchone()
+        return dict(row._mapping) if row else None
+
+
+def fetch_all(query: str, params: dict = None):
+    """Fetch all rows."""
+    with engine.connect() as conn:
+        result = conn.execute(text(query), params or {})
+        rows = result.fetchall()
+        return [dict(row._mapping) for row in rows]
+
+
+def execute_query(query: str, params: dict = None):
+    """Execute insert/update/delete query and return affected row count."""
+    with engine.begin() as conn:  # begin ensures commit/rollback
+        result = conn.execute(text(query), params or {})
+        return result.rowcount
+

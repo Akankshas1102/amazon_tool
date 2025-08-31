@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from config import get_db_connection
 from logger import get_logger
+from config import execute_query
 
 logger = get_logger(__name__)
 
