@@ -1,106 +1,94 @@
-from sqlalchemy import text
-from config import get_db_connection
+from typing import List, Dict, Any
+from config import fetch_all, fetch_one
 import logging
-import requests
-from config import fetch_one , fetch_all
-
 
 logger = logging.getLogger(__name__)
-def get_all_devices(state: str | None = None):
+
+
+def get_all_devices(
+    state: str | None = None,
+    building: str | None = None,
+    search: str | None = None,
+    limit: int = 100,
+    offset: int = 0
+) -> List[Dict[str, Any]]:
     """
-    Retrieves all devices from the database, with an optional filter for the state.
-    Maps DB columns to Pydantic field names.
+    Fetch devices from Device_TBL with optional filters:
+      - state: partial match against dvcCurrentState_TXT
+      - building: exact match against dvcBuilding_FRK
+      - search: partial match against dvcName_TXT or dvcCurrentState_TXT
+    Supports pagination via limit/offset.
     """
-    sql = """
-        SELECT Device_PRK, dvcName_TXT, dvcCurrentState_TXT
-        FROM Device_TBL
-    """
+    where_clauses = []
     params = {}
 
     if state:
-        sql += " WHERE dvcCurrentState_TXT LIKE :state_filter"
-        params["state_filter"] = f"%{state}%"
+        where_clauses.append("LOWER(dvcCurrentState_TXT) LIKE LOWER(:state)")
+        params["state"] = f"%{state}%"
 
-    with get_db_connection() as conn:
-        results = conn.execute(text(sql), params).mappings().all()
+    if building:
+        where_clauses.append("dvcBuilding_FRK = :building")
+        params["building"] = building
 
-        # ✅ Map DB column names → Pydantic model field names
-        devices = [
-            {
-                "id": row["Device_PRK"],
-                "name": row["dvcName_TXT"],
-                "state": row["dvcCurrentState_TXT"]
-            }
-            for row in results
-        ]
+    if search:
+        where_clauses.append("(LOWER(dvcName_TXT) LIKE LOWER(:search) OR LOWER(dvcCurrentState_TXT) LIKE LOWER(:search))")
+        params["search"] = f"%{search}%"
 
-        return devices
-
-def handle_arm_event():
+    sql = """
+        SELECT Device_PRK AS id,
+               dvcName_TXT AS name,
+               dvcDeviceType_FRK AS device_type,
+               dvcCurrentState_TXT AS state,
+               dvcBuilding_FRK AS building
+        FROM Device_TBL
     """
-    Checks for armed devices and updates proevents accordingly.
+
+    if where_clauses:
+        sql += " WHERE " + " AND ".join(where_clauses)
+
+    sql += " ORDER BY dvcName_TXT OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+    params.update({"limit": limit, "offset": offset})
+
+    rows = fetch_all(sql, params)
+    result = []
+    for r in rows:
+        result.append({
+            "id": r.get("id"),
+            "name": r.get("name") or "",
+            "state": r.get("state") or "",
+            "device_type": r.get("device_type") or "",
+            "building": r.get("building") or ""
+        })
+    return result
+
+
+def get_distinct_buildings() -> List[str]:
     """
-    update_sql = """
-        UPDATE ProEvent_TBL
-        SET pevReactive_FRK = 1
-        WHERE pevAlias_TXT LIKE '%arm%';
+    Return distinct building identifiers from Device_TBL.
     """
-    check_sql = "SELECT 1 FROM Device_TBL WHERE dvcCurrentState_TXT LIKE '%AreaArmingStates.4%'"
-
-    with get_db_connection() as conn:
-        device_found = conn.execute(text(check_sql)).first()
-        if device_found:
-            conn.execute(text(update_sql))
-            conn.commit()
-            return {"status": "success", "message": "ARM event handled. ProEvents updated."}
-    return {"status": "no_action", "message": "No armed devices found."}
-
-
-def handle_disarm_event():
+    sql = """
+        SELECT DISTINCT dvcBuilding_FRK AS building
+        FROM Device_TBL
+        WHERE dvcBuilding_FRK IS NOT NULL
+        ORDER BY dvcBuilding_FRK
     """
-    Checks for disarmed devices and updates proevents accordingly.
+    rows = fetch_all(sql)
+    return [r["building"] for r in rows]
+
+
+def get_linked_proevent_id(device_id: int) -> int | None:
     """
-    update_sql = """
-        UPDATE ProEvent_TBL
-        SET pevReactive_FRK = 0
-        WHERE pevAlias_TXT LIKE '%arm%';
-    """
-    check_sql = "SELECT 1 FROM Device_TBL WHERE dvcCurrentState_TXT LIKE '%AreaArmingStates.2%'"
-
-    with get_db_connection() as conn:
-        device_found = conn.execute(text(check_sql)).first()
-        if device_found:
-            conn.execute(text(update_sql))
-            conn.commit()
-            return {"status": "success", "message": "DISARM event handled. ProEvents updated."}
-    return {"status": "no_action", "message": "No disarmed devices found."}
-
-
-BASE_URL = "http://localhost:8000/api/devices"
-
-def fetch_all_devices():
-    """Call the GET /api/devices endpoint and return JSON"""
-    response = requests.get(BASE_URL)
-    if response.status_code == 200:
-        return response.json()
-    return []
-
-def get_device_state(device_id: int):
-    """Get state of a device by DeviceID from the API"""
-    devices = fetch_all_devices()
-    for d in devices:
-        if d["id"] == device_id:
-            return d["state"]
-    return None
-
-def get_linked_proevent_id(device_id: int):
-    """
-    Retrieves the linked proevent ID for a given device ID.
+    Retrieves the linked ProEvent ID for a given device ID.
     """
     sql = "SELECT dstProEvent_FRK FROM DeviceStateLink_TBL WHERE dstDevice_FRK = :device_id"
-    params = {"device_id": device_id}
+    row = fetch_one(sql, {"device_id": device_id})
+    return row.get("dstProEvent_FRK") if row else None
 
-    row = fetch_one(sql, params)
-    if row:
-        return row["dstProEvent_FRK"]
-    return None
+
+def get_device_current_state(device_id: int) -> str | None:
+    """
+    Return the current state for a device.
+    """
+    sql = "SELECT dvcCurrentState_TXT AS state FROM Device_TBL WHERE Device_PRK = :device_id"
+    row = fetch_one(sql, {"device_id": device_id})
+    return row.get("state") if row else None
