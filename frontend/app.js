@@ -1,174 +1,210 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE_URL = 'http://127.0.0.1:8000/api';
-  const buildingsContainer = document.getElementById('deviceList'); // reuse existing container
-  const loader = document.getElementById('loader');
-  const notification = document.getElementById('notification');
+    const API_BASE_URL = 'http://127.0.0.1:8000/api';
+    const buildingsContainer = document.getElementById('deviceList');
+    const loader = document.getElementById('loader');
+    const notification = document.getElementById('notification');
 
-  const BUILD_PAGE_SIZE = 100; // devices per page when loading a building
+    const BUILD_PAGE_SIZE = 100;
 
-  function showNotification(text, timeout = 3000) {
-    notification.textContent = text;
-    notification.classList.add('show');
-    setTimeout(() => notification.classList.remove('show'), timeout);
-  }
+    function showNotification(text, isError = false, timeout = 3000) {
+        notification.textContent = text;
+        notification.style.backgroundColor = isError ? '#ef4444' : '#333';
+        notification.classList.add('show');
+        setTimeout(() => notification.classList.remove('show'), timeout);
+    }
 
-  async function fetchBuildings() {
-    const res = await fetch(`${API_BASE_URL}/buildings`);
-    if (!res.ok) throw new Error('Failed to fetch buildings');
-    return await res.json();
-  }
-
-  async function fetchDevicesForBuilding(building, limit = BUILD_PAGE_SIZE, offset = 0, search = '') {
-    const params = new URLSearchParams();
-    if (building) params.append('building', building);
-    if (search) params.append('search', search);
-    params.append('limit', String(limit));
-    params.append('offset', String(offset));
-    const url = `${API_BASE_URL}/devices?` + params.toString();
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch devices for ' + building);
-    return await res.json();
-  }
-
-  function createBuildingCard(building) {
-    const card = document.createElement('div');
-    card.className = 'building-card';
-    card.dataset.building = building;
-    card.innerHTML = `
-      <div class="building-header">
-        <button class="toggle-btn">+</button>
-        <h2 class="building-title">Building: ${building}</h2>
-      </div>
-      <div class="building-body" style="display:none;">
-        <div class="building-controls">
-          <input type="text" class="building-search" placeholder="Search devices (name or state)"/>
-          <button class="load-more" style="display:none;">Load more</button>
-        </div>
-        <ul class="devices-list"></ul>
-        <div class="building-loader" style="display:none;">Loading...</div>
-      </div>
-    `;
-    // state
-    card._offset = 0;
-    card._ended = false;
-    card._lastSearch = '';
-
-    // attach handlers
-    const toggleBtn = card.querySelector('.toggle-btn');
-    const body = card.querySelector('.building-body');
-    const searchInput = card.querySelector('.building-search');
-    const devicesList = card.querySelector('.devices-list');
-    const loadMoreBtn = card.querySelector('.load-more');
-    const buildingLoader = card.querySelector('.building-loader');
-
-    toggleBtn.addEventListener('click', async () => {
-      if (body.style.display === 'none') {
-        body.style.display = 'block';
-        toggleBtn.textContent = '-';
-        // if devices not yet loaded, load first page
-        if (devicesList.children.length === 0) {
-          await loadDevices(true);
+    async function apiRequest(endpoint, options = {}) {
+        const url = `${API_BASE_URL}/${endpoint}`;
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
+                throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error(`API request to ${endpoint} failed:`, error);
+            showNotification(error.message, true);
+            throw error;
         }
-      } else {
-        body.style.display = 'none';
-        toggleBtn.textContent = '+';
-      }
-    });
+    }
 
-    let searchDebounceTimer = null;
-    searchInput.addEventListener('input', () => {
-      clearTimeout(searchDebounceTimer);
-      searchDebounceTimer = setTimeout(async () => {
-        card._offset = 0;
-        card._ended = false;
-        card._lastSearch = searchInput.value.trim();
-        devicesList.innerHTML = '';
-        await loadDevices(true);
-      }, 400);
-    });
+    function createBuildingCard(building) { // Expects {id, name}
+        const card = document.createElement('div');
+        card.className = 'building-card';
+        card.dataset.buildingId = building.id; // Store building ID
+        card.innerHTML = `
+            <div class="building-header">
+                <button class="toggle-btn">+</button>
+                <h2 class="building-title">${escapeHtml(building.name)}</h2>
+                <div class="building-status"></div>
+            </div>
+            <div class="building-body" style="display:none;">
+                <div class="building-controls">
+                    <input type="text" class="building-search" placeholder="Search devices..."/>
+                </div>
+                <ul class="devices-list"></ul>
+                <div class="building-loader" style="display:none;">Loading...</div>
+            </div>
+        `;
+        
+        const header = card.querySelector('.building-header');
+        const body = card.querySelector('.building-body');
+        const devicesList = card.querySelector('.devices-list');
 
-    loadMoreBtn.addEventListener('click', async () => {
-      await loadDevices(false);
-    });
+        const toggleVisibility = async () => {
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            header.querySelector('.toggle-btn').textContent = isHidden ? '-' : '+';
+            if (isHidden && devicesList.children.length === 0) {
+                await loadDevicesForBuilding(card);
+            }
+        };
 
-    async function loadDevices(reset = false) {
-      try {
-        buildingLoader.style.display = 'block';
-        const search = card._lastSearch || '';
-        const data = await fetchDevicesForBuilding(building, BUILD_PAGE_SIZE, card._offset, search);
-        if (!Array.isArray(data) || data.length === 0) {
-          // no results
-          if (reset) {
-            devicesList.innerHTML = '<li class="muted">No devices found.</li>';
-          }
-          card._ended = true;
-          loadMoreBtn.style.display = 'none';
-          return;
-        }
-        // append devices
-        data.forEach(d => {
-          const li = document.createElement('li');
-          li.className = 'device-item';
-          li.innerHTML = `<div class="device-name">${escapeHtml(d.name)}</div><div class="device-state">${escapeHtml(d.state || '')}</div>`;
-          devicesList.appendChild(li);
+        header.addEventListener('click', toggleVisibility);
+
+        devicesList.addEventListener('click', (e) => {
+            const deviceItem = e.target.closest('.device-item');
+            if (deviceItem) handleDeviceClick(deviceItem);
         });
-        // advance offset
-        card._offset += data.length;
-        // show load more if we got a full page
-        if (data.length >= BUILD_PAGE_SIZE) {
-          loadMoreBtn.style.display = 'inline-block';
-        } else {
-          loadMoreBtn.style.display = 'none';
-          card._ended = true;
+
+        const searchInput = card.querySelector('.building-search');
+        let searchDebounceTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                loadDevicesForBuilding(card, true, searchInput.value.trim());
+            }, 400);
+        });
+
+        return card;
+    }
+
+    async function loadDevicesForBuilding(card, reset = false, search = '') {
+        const buildingId = card.dataset.buildingId; // Use building ID
+        const devicesList = card.querySelector('.devices-list');
+        const loader = card.querySelector('.building-loader');
+        
+        if (reset) devicesList.innerHTML = '';
+        loader.style.display = 'block';
+
+        try {
+            const devices = await apiRequest(`devices?building=${buildingId}&limit=${BUILD_PAGE_SIZE}&search=${encodeURIComponent(search)}`);
+            if (devices.length === 0 && reset) {
+                devicesList.innerHTML = '<li class="muted">No devices found.</li>';
+            } else {
+                devices.forEach(device => devicesList.appendChild(createDeviceItem(device)));
+            }
+        } finally {
+            loader.style.display = 'none';
+            updateBuildingStatus(card);
         }
-      } catch (err) {
-        console.error(err);
-        showNotification('Error loading devices: ' + err.message);
-      } finally {
-        buildingLoader.style.display = 'none';
-      }
     }
 
-    return card;
-  }
+    function createDeviceItem(device) {
+        const li = document.createElement('li');
+        const state = (device.state || 'unknown').toLowerCase();
+        li.className = 'device-item';
+        li.dataset.deviceId = device.id;
+        li.dataset.state = state;
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>"'`=\/]/g, function (s) {
-      return ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '/': '&#x2F;',
-        '`': '&#x60;',
-        '=': '&#x3D;'
-      })[s];
-    });
-  }
+        const stateClass = state === 'armed' ? 'state-armed' : (state === 'disarmed' ? 'state-disarmed' : 'state-unknown');
 
-  async function initialize() {
-    try {
-      loader.style.display = 'block';
-      const buildings = await fetchBuildings();
-      buildingsContainer.innerHTML = '';
-      if (!buildings || buildings.length === 0) {
-        buildingsContainer.innerHTML = '<p>No buildings found.</p>';
-        return;
-      }
-      // create card for each building
-      buildings.forEach(b => {
-        const card = createBuildingCard(b);
-        buildingsContainer.appendChild(card);
-      });
-    } catch (err) {
-      console.error(err);
-      showNotification('Failed to load buildings: ' + err.message);
-    } finally {
-      loader.style.display = 'none';
+        li.innerHTML = `
+            <span class="device-state-indicator ${stateClass}"></span>
+            <div class="device-name">${escapeHtml(device.name)} (ID: ${device.id})</div>
+            <div class="device-state-text">${escapeHtml(device.state)}</div>
+        `;
+        return li;
     }
-  }
 
-  initialize();
+    async function handleDeviceClick(deviceItem) {
+        const deviceId = parseInt(deviceItem.dataset.deviceId, 10);
+        const currentState = deviceItem.dataset.state;
+        
+        if (currentState !== 'armed' && currentState !== 'disarmed') {
+            showNotification('Device is in an unmodifiable state.', true);
+            return;
+        }
+
+        const action = currentState === 'armed' ? 'disarm' : 'arm';
+        deviceItem.style.opacity = '0.5';
+
+        try {
+            const result = await apiRequest('devices/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_ids: [deviceId], action: action })
+            });
+
+            if (result.success_count > 0) {
+                updateDeviceUI(deviceItem, action === 'arm' ? 'armed' : 'disarmed');
+                showNotification(`Device ${action}ed successfully.`);
+            } else {
+                const detail = result.details.find(d => d.device_id === deviceId);
+                throw new Error(detail ? detail.message : 'Action failed on the server.');
+            }
+        } catch (error) {
+            showNotification(error.message, true);
+        } finally {
+            deviceItem.style.opacity = '1';
+            updateBuildingStatus(deviceItem.closest('.building-card'));
+        }
+    }
+
+    function updateDeviceUI(deviceItem, newState) {
+        const stateIndicator = deviceItem.querySelector('.device-state-indicator');
+        const stateText = deviceItem.querySelector('.device-state-text');
+        
+        deviceItem.dataset.state = newState;
+        stateText.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
+
+        stateIndicator.className = 'device-state-indicator';
+        stateIndicator.classList.add(newState === 'armed' ? 'state-armed' : 'state-disarmed');
+    }
+
+    function updateBuildingStatus(card) {
+        const devices = card.querySelectorAll('.device-item');
+        const statusEl = card.querySelector('.building-status');
+        if (devices.length === 0) {
+            statusEl.textContent = 'No Devices';
+            statusEl.className = 'building-status status-none-armed';
+            return;
+        }
+
+        const armedCount = Array.from(devices).filter(d => d.dataset.state === 'armed').length;
+
+        if (armedCount === devices.length) {
+            statusEl.textContent = 'All Armed';
+            statusEl.className = 'building-status status-all-armed';
+        } else if (armedCount > 0) {
+            statusEl.textContent = 'Partially Armed';
+            statusEl.className = 'building-status status-partial-armed';
+        } else {
+            statusEl.textContent = 'All Disarmed';
+            statusEl.className = 'building-status status-none-armed';
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, s => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;',
+            '"': '&quot;', "'": '&#39;'
+        }[s]));
+    }
+
+    async function initialize() {
+        try {
+            loader.style.display = 'block';
+            const buildings = await apiRequest('buildings');
+            buildingsContainer.innerHTML = '';
+            buildings.forEach(building => {
+                buildingsContainer.appendChild(createBuildingCard(building));
+            });
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    initialize();
 });

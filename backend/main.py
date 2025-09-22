@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # ✅ correct import
+from fastapi.middleware.cors import CORSMiddleware
 from routes import router as device_router
 from config import health_check
 
 app = FastAPI(title="Amazon Device Control API")
 
-# ✅ Allow requests from your frontend (127.0.0.1:5500)
+# This section gives your frontend permission to access the backend
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500"
@@ -14,10 +14,10 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,        # frontend URLs allowed
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],          # allow all HTTP methods
-    allow_headers=["*"],          # allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Add the /api prefix to all routes from routes.py
