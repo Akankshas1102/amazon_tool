@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 from config import fetch_all, fetch_one
+from sqlite_config import get_building_time, get_all_building_times
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ def get_all_devices(
 
 def get_distinct_buildings() -> List[Dict[str, Any]]:
     """
-    Return distinct buildings (ID and Name) that have devices.
+    Return distinct buildings (ID and Name) that have devices, with scheduled times.
     """
     sql = """
         SELECT DISTINCT
@@ -61,7 +62,16 @@ def get_distinct_buildings() -> List[Dict[str, Any]]:
         ORDER BY b.Bldbuildingname_TXT
     """
     rows = fetch_all(sql)
-    return [dict(row) for row in rows]
+    buildings = [dict(row) for row in rows]
+    
+    # Get all building times from SQLite
+    building_times = get_all_building_times()
+    
+    # Add scheduled_time to each building
+    for building in buildings:
+        building["scheduled_time"] = building_times.get(building["id"])
+    
+    return buildings
 
 
 def get_linked_proevent_id(device_id: int) -> int | None:

@@ -3,7 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildingsContainer = document.getElementById('deviceList');
     const loader = document.getElementById('loader');
     const notification = document.getElementById('notification');
+    const buildingSearch = document.querySelector('.building-search');
+    const buildingDropdown = document.querySelector('.building-dropdown');
+    const clearFilter = document.querySelector('.clear-filter');
 
+    let allBuildings = [];
+    let selectedBuildingId = null;
     const BUILD_PAGE_SIZE = 100;
 
     function showNotification(text, isError = false, timeout = 3000) {
@@ -29,59 +34,190 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function createBuildingCard(building) { // Expects {id, name}
+    function setupBuildingSelector() {
+        buildingSearch.addEventListener('input', () => {
+            const query = buildingSearch.value.toLowerCase();
+            buildingDropdown.innerHTML = '';
+            
+            if (query.length === 0) {
+                buildingDropdown.style.display = 'none';
+                clearFilter.style.display = 'none';
+                return;
+            }
+
+            const filtered = allBuildings.filter(b => 
+                b.name.toLowerCase().includes(query)
+            );
+
+            if (filtered.length > 0) {
+                filtered.forEach(building => {
+                    const option = document.createElement('div');
+                    option.className = 'building-option';
+                    option.textContent = building.name;
+                    option.addEventListener('click', () => selectBuilding(building));
+                    buildingDropdown.appendChild(option);
+                });
+                buildingDropdown.style.display = 'block';
+                clearFilter.style.display = 'block';
+            } else {
+                buildingDropdown.style.display = 'none';
+            }
+        });
+
+        clearFilter.addEventListener('click', () => {
+            buildingSearch.value = '';
+            buildingDropdown.style.display = 'none';
+            clearFilter.style.display = 'none';
+            selectedBuildingId = null;
+            loadAllBuildings();
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!buildingSearch.contains(e.target) && !buildingDropdown.contains(e.target)) {
+                buildingDropdown.style.display = 'none';
+            }
+        });
+    }
+
+    function selectBuilding(building) {
+        buildingSearch.value = building.name;
+        buildingDropdown.style.display = 'none';
+        selectedBuildingId = building.id;
+        clearFilter.style.display = 'block';
+        loadFilteredBuilding(building);
+    }
+
+    async function loadFilteredBuilding(building) {
+        buildingsContainer.innerHTML = '';
+        const card = createBuildingCard(building);
+        buildingsContainer.appendChild(card);
+        await loadDevicesForBuilding(card);
+        // Expand the building by default
+        const body = card.querySelector('.building-body');
+        const toggleBtn = card.querySelector('.toggle-btn');
+        body.style.display = 'block';
+        toggleBtn.textContent = '-';
+    }
+
+    function createBuildingCard(building) {
         const card = document.createElement('div');
         card.className = 'building-card';
-        card.dataset.buildingId = building.id; // Store building ID
+        card.dataset.buildingId = building.id;
+        
+        const scheduledTime = building.scheduled_time || '09:00';
+        
         card.innerHTML = `
             <div class="building-header">
                 <button class="toggle-btn">+</button>
                 <h2 class="building-title">${escapeHtml(building.name)}</h2>
+                <div class="building-time-control">
+                    <label style="font-size:12px; color:#64748b;">Schedule:</label>
+                    <input type="time" class="time-input" value="${scheduledTime}" />
+                    <button class="time-save-btn">Save</button>
+                </div>
                 <div class="building-status"></div>
             </div>
             <div class="building-body" style="display:none;">
                 <div class="building-controls">
-                    <input type="text" class="building-search" placeholder="Search devices..."/>
+                    <input type="text" class="device-search" placeholder="Search devices..."/>
+                    <div class="bulk-actions">
+                        <button class="bulk-btn bulk-arm" disabled>Arm Selected</button>
+                        <button class="bulk-btn bulk-disarm" disabled>Disarm Selected</button>
+                    </div>
                 </div>
                 <ul class="devices-list"></ul>
                 <div class="building-loader" style="display:none;">Loading...</div>
             </div>
         `;
         
+        setupBuildingCardEvents(card);
+        return card;
+    }
+
+    function setupBuildingCardEvents(card) {
         const header = card.querySelector('.building-header');
         const body = card.querySelector('.building-body');
         const devicesList = card.querySelector('.devices-list');
+        const toggleBtn = card.querySelector('.toggle-btn');
+        const timeInput = card.querySelector('.time-input');
+        const timeSaveBtn = card.querySelector('.time-save-btn');
+        const armBtn = card.querySelector('.bulk-arm');
+        const disarmBtn = card.querySelector('.bulk-disarm');
+        const deviceSearch = card.querySelector('.device-search');
 
+        // Toggle building visibility
         const toggleVisibility = async () => {
             const isHidden = body.style.display === 'none';
             body.style.display = isHidden ? 'block' : 'none';
-            header.querySelector('.toggle-btn').textContent = isHidden ? '-' : '+';
+            toggleBtn.textContent = isHidden ? '-' : '+';
             if (isHidden && devicesList.children.length === 0) {
                 await loadDevicesForBuilding(card);
             }
         };
 
-        header.addEventListener('click', toggleVisibility);
-
-        devicesList.addEventListener('click', (e) => {
-            const deviceItem = e.target.closest('.device-item');
-            if (deviceItem) handleDeviceClick(deviceItem);
+        header.addEventListener('click', (e) => {
+            if (!e.target.closest('.building-time-control')) {
+                toggleVisibility();
+            }
         });
 
-        const searchInput = card.querySelector('.building-search');
+        // Save building time
+        timeSaveBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const buildingId = parseInt(card.dataset.buildingId);
+            const time = timeInput.value;
+            
+            if (!time) {
+                showNotification('Please select a valid time', true);
+                return;
+            }
+
+            try {
+                await apiRequest(`buildings/${buildingId}/time`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        building_id: buildingId,
+                        scheduled_time: time
+                    })
+                });
+                showNotification('Building schedule updated successfully');
+            } catch (error) {
+                showNotification('Failed to update building schedule', true);
+            }
+        });
+
+        // Device search
         let searchDebounceTimer;
-        searchInput.addEventListener('input', () => {
+        deviceSearch.addEventListener('input', () => {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
-                loadDevicesForBuilding(card, true, searchInput.value.trim());
+                loadDevicesForBuilding(card, true, deviceSearch.value.trim());
             }, 400);
         });
 
-        return card;
+        // Bulk actions
+        armBtn.addEventListener('click', () => performBulkAction(card, 'arm'));
+        disarmBtn.addEventListener('click', () => performBulkAction(card, 'disarm'));
+
+        // Device selection changes
+        devicesList.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                updateBulkActionButtons(card);
+            }
+        });
+
+        // Device state changes
+        devicesList.addEventListener('change', (e) => {
+            if (e.target.classList.contains('device-state-select')) {
+                handleDeviceStateChange(e.target);
+            }
+        });
     }
 
     async function loadDevicesForBuilding(card, reset = false, search = '') {
-        const buildingId = card.dataset.buildingId; // Use building ID
+        const buildingId = card.dataset.buildingId;
         const devicesList = card.querySelector('.devices-list');
         const loader = card.querySelector('.building-loader');
         
@@ -98,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             loader.style.display = 'none';
             updateBuildingStatus(card);
+            updateBulkActionButtons(card);
         }
     }
 
@@ -111,23 +248,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const stateClass = state === 'armed' ? 'state-armed' : (state === 'disarmed' ? 'state-disarmed' : 'state-unknown');
 
         li.innerHTML = `
+            <input type="checkbox" class="device-checkbox" />
             <span class="device-state-indicator ${stateClass}"></span>
             <div class="device-name">${escapeHtml(device.name)} (ID: ${device.id})</div>
-            <div class="device-state-text">${escapeHtml(device.state)}</div>
+            <select class="device-state-select">
+                <option value="armed" ${state === 'armed' ? 'selected' : ''}>Armed</option>
+                <option value="disarmed" ${state === 'disarmed' ? 'selected' : ''}>Disarmed</option>
+            </select>
         `;
         return li;
     }
 
-    async function handleDeviceClick(deviceItem) {
+    async function handleDeviceStateChange(selectElement) {
+        const deviceItem = selectElement.closest('.device-item');
         const deviceId = parseInt(deviceItem.dataset.deviceId, 10);
+        const newState = selectElement.value;
         const currentState = deviceItem.dataset.state;
         
-        if (currentState !== 'armed' && currentState !== 'disarmed') {
-            showNotification('Device is in an unmodifiable state.', true);
-            return;
-        }
+        if (newState === currentState) return;
 
-        const action = currentState === 'armed' ? 'disarm' : 'arm';
+        const action = newState === 'armed' ? 'arm' : 'disarm';
         deviceItem.style.opacity = '0.5';
 
         try {
@@ -138,13 +278,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (result.success_count > 0) {
-                updateDeviceUI(deviceItem, action === 'arm' ? 'armed' : 'disarmed');
+                updateDeviceUI(deviceItem, newState);
                 showNotification(`Device ${action}ed successfully.`);
             } else {
                 const detail = result.details.find(d => d.device_id === deviceId);
                 throw new Error(detail ? detail.message : 'Action failed on the server.');
             }
         } catch (error) {
+            // Revert the select value
+            selectElement.value = currentState;
             showNotification(error.message, true);
         } finally {
             deviceItem.style.opacity = '1';
@@ -152,12 +294,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function performBulkAction(card, action) {
+        const selectedDevices = Array.from(card.querySelectorAll('.device-checkbox:checked'))
+            .map(cb => parseInt(cb.closest('.device-item').dataset.deviceId, 10));
+
+        if (selectedDevices.length === 0) {
+            showNotification('Please select devices first', true);
+            return;
+        }
+
+        const armBtn = card.querySelector('.bulk-arm');
+        const disarmBtn = card.querySelector('.bulk-disarm');
+        
+        armBtn.disabled = true;
+        disarmBtn.disabled = true;
+
+        try {
+            const result = await apiRequest('devices/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_ids: selectedDevices, action: action })
+            });
+
+            // Update UI for successful devices
+            result.details.forEach(detail => {
+                if (detail.status === 'Success') {
+                    const deviceItem = card.querySelector(`[data-device-id="${detail.device_id}"]`);
+                    if (deviceItem) {
+                        const newState = action === 'arm' ? 'armed' : 'disarmed';
+                        updateDeviceUI(deviceItem, newState);
+                        // Update the select element
+                        const select = deviceItem.querySelector('.device-state-select');
+                        select.value = newState;
+                    }
+                }
+            });
+
+            if (result.success_count > 0) {
+                showNotification(`${result.success_count} device(s) ${action}ed successfully.`);
+            }
+            
+            if (result.failure_count > 0) {
+                showNotification(`${result.failure_count} device(s) failed to ${action}.`, true);
+            }
+
+            // Clear selections
+            card.querySelectorAll('.device-checkbox:checked').forEach(cb => cb.checked = false);
+            
+        } finally {
+            updateBulkActionButtons(card);
+            updateBuildingStatus(card);
+        }
+    }
+
+    function updateBulkActionButtons(card) {
+        const selectedCount = card.querySelectorAll('.device-checkbox:checked').length;
+        const armBtn = card.querySelector('.bulk-arm');
+        const disarmBtn = card.querySelector('.bulk-disarm');
+        
+        armBtn.disabled = selectedCount === 0;
+        disarmBtn.disabled = selectedCount === 0;
+    }
+
     function updateDeviceUI(deviceItem, newState) {
         const stateIndicator = deviceItem.querySelector('.device-state-indicator');
-        const stateText = deviceItem.querySelector('.device-state-text');
         
         deviceItem.dataset.state = newState;
-        stateText.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
 
         stateIndicator.className = 'device-state-indicator';
         stateIndicator.classList.add(newState === 'armed' ? 'state-armed' : 'state-disarmed');
@@ -166,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateBuildingStatus(card) {
         const devices = card.querySelectorAll('.device-item');
         const statusEl = card.querySelector('.building-status');
+        
         if (devices.length === 0) {
             statusEl.textContent = 'No Devices';
             statusEl.className = 'building-status status-none-armed';
@@ -193,17 +396,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }[s]));
     }
 
-    async function initialize() {
+    async function loadAllBuildings() {
         try {
             loader.style.display = 'block';
-            const buildings = await apiRequest('buildings');
+            allBuildings = await apiRequest('buildings');
             buildingsContainer.innerHTML = '';
-            buildings.forEach(building => {
+            
+            allBuildings.forEach(building => {
                 buildingsContainer.appendChild(createBuildingCard(building));
             });
         } finally {
             loader.style.display = 'none';
         }
+    }
+
+    async function initialize() {
+        setupBuildingSelector();
+        await loadAllBuildings();
     }
 
     initialize();

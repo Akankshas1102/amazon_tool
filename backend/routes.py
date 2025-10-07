@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from services import device_service, proevent_service
-from models import DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse, BuildingOut
+from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse, 
+                   BuildingOut, BuildingTimeRequest, BuildingTimeResponse)
+from sqlite_config import get_building_time, set_building_time
 from logger import get_logger
 
 router = APIRouter()
@@ -10,9 +12,17 @@ logger = get_logger(__name__)
 @router.get("/buildings", response_model=list[BuildingOut])
 def list_buildings():
     """
-    Return distinct building identifiers from Device_TBL.
+    Return distinct building identifiers from Device_TBL with scheduled times.
     """
-    return device_service.get_distinct_buildings()
+    buildings = device_service.get_distinct_buildings()
+    return [
+        BuildingOut(
+            id=b["id"],
+            name=b["name"],
+            scheduled_time=b.get("scheduled_time")
+        )
+        for b in buildings
+    ]
 
 
 @router.get("/devices", response_model=list[DeviceOut])
@@ -85,4 +95,35 @@ def device_action(req: DeviceActionRequest):
         success_count=success_count,
         failure_count=failure_count,
         details=results
+    )
+
+
+@router.get("/buildings/{building_id}/time")
+def get_building_scheduled_time(building_id: int):
+    """
+    Get the scheduled time for a specific building.
+    """
+    scheduled_time = get_building_time(building_id)
+    return {
+        "building_id": building_id,
+        "scheduled_time": scheduled_time
+    }
+
+
+@router.post("/buildings/{building_id}/time", response_model=BuildingTimeResponse)
+def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
+    """
+    Set the scheduled time for a specific building.
+    """
+    if request.building_id != building_id:
+        raise HTTPException(400, "Building ID in path and body must match")
+    
+    success = set_building_time(building_id, request.scheduled_time)
+    if not success:
+        raise HTTPException(500, "Failed to update building scheduled time")
+    
+    return BuildingTimeResponse(
+        building_id=building_id,
+        scheduled_time=request.scheduled_time,
+        updated=True
     )

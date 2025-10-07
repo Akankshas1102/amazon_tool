@@ -7,16 +7,23 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Amazon Device Control</h1>
-    </header>
-    <main>
-      <div id="loader" class="loader">Loading...</div>
-      <div id="deviceList" class="buildings-container"></div>
-    </main>
-    <div id="notification" class="notification"></div>
-  </div>
-  <script src="app.js"></script>
+    <div class="container">
+        <header>
+            <h1>Amazon Device Control</h1>
+            <div class="header-controls">
+                <div class="building-selector">
+                    <input type="text" class="building-search" placeholder="Search buildings..." />
+                    <button class="clear-filter" style="display:none;">&times;</button>
+                    <div class="building-dropdown"></div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div id="loader" class="loader" style="display:none;">Loading...</div>
+            <div id="deviceList" class="buildings-container"></div>
+        </main>
+        <div id="notification" class="notification"></div>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
