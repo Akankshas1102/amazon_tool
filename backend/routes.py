@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query
 from services import device_service, proevent_service
 from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse, 
-                   BuildingOut, BuildingTimeRequest, BuildingTimeResponse)
-from sqlite_config import get_building_time, set_building_time
+                   BuildingOut, BuildingTimeRequest, BuildingTimeResponse,
+                   IgnoredAlarmRequest, IgnoredAlarmResponse) # Added IgnoredAlarm models
+from sqlite_config import get_building_time, set_building_time, get_ignored_alarms, add_ignored_alarm, remove_ignored_alarm
 from logger import get_logger
 
 router = APIRouter()
@@ -39,15 +40,21 @@ def list_devices(
     devices = device_service.get_all_devices(
         state=state, building=building, search=search, limit=limit, offset=offset
     )
-    return [
-        DeviceOut(
+    # Get the list of ignored alarms
+    ignored_alarms = get_ignored_alarms()
+    
+    devices_out = []
+    for d in devices:
+        device_out = DeviceOut(
             id=d["id"],
             name=d["name"],
             state=d.get("state") or "",
-            building_name=d.get("building_name") or "Unknown"
+            building_name=d.get("building_name") or "Unknown",
+            is_ignored=d["id"] in ignored_alarms  # Set the is_ignored flag
         )
-        for d in devices
-    ]
+        devices_out.append(device_out)
+        
+    return devices_out
 
 
 @router.post("/devices/action", response_model=DeviceActionSummaryResponse)
@@ -126,4 +133,33 @@ def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
         building_id=building_id,
         scheduled_time=request.scheduled_time,
         updated=True
+    )
+
+# --- New Endpoints for Ignored Alarms ---
+
+@router.get("/devices/ignored-alarms", response_model=list[int])
+def get_ignored_alarms_list():
+    """
+    Get the list of all ignored alarm device IDs.
+    """
+    return get_ignored_alarms()
+
+@router.post("/devices/ignored-alarms", response_model=IgnoredAlarmResponse)
+def manage_ignored_alarms(req: IgnoredAlarmRequest):
+    """
+    Add or remove a device from the ignored alarms list.
+    """
+    success = False
+    if req.action == "ignore":
+        success = add_ignored_alarm(req.device_id)
+    elif req.action == "unignore":
+        success = remove_ignored_alarm(req.device_id)
+    
+    if not success:
+        raise HTTPException(500, f"Failed to {req.action} alarm for device {req.device_id}")
+        
+    return IgnoredAlarmResponse(
+        device_id=req.device_id,
+        action=req.action,
+        success=True
     )

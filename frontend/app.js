@@ -72,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadAllBuildings();
         });
 
-        // Hide dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!buildingSearch.contains(e.target) && !buildingDropdown.contains(e.target)) {
                 buildingDropdown.style.display = 'none';
@@ -93,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = createBuildingCard(building);
         buildingsContainer.appendChild(card);
         await loadDevicesForBuilding(card);
-        // Expand the building by default
         const body = card.querySelector('.building-body');
         const toggleBtn = card.querySelector('.toggle-btn');
         body.style.display = 'block';
@@ -146,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const disarmBtn = card.querySelector('.bulk-disarm');
         const deviceSearch = card.querySelector('.device-search');
 
-        // Toggle building visibility
         const toggleVisibility = async () => {
             const isHidden = body.style.display === 'none';
             body.style.display = isHidden ? 'block' : 'none';
@@ -162,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Save building time
         timeSaveBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const buildingId = parseInt(card.dataset.buildingId);
@@ -188,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Device search
         let searchDebounceTimer;
         deviceSearch.addEventListener('input', () => {
             clearTimeout(searchDebounceTimer);
@@ -197,21 +192,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 400);
         });
 
-        // Bulk actions
         armBtn.addEventListener('click', () => performBulkAction(card, 'arm'));
         disarmBtn.addEventListener('click', () => performBulkAction(card, 'disarm'));
 
-        // Device selection changes
         devicesList.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox') {
                 updateBulkActionButtons(card);
             }
-        });
-
-        // Device state changes
-        devicesList.addEventListener('change', (e) => {
             if (e.target.classList.contains('device-state-select')) {
                 handleDeviceStateChange(e.target);
+            }
+            if (e.target.classList.contains('ignore-alarm-checkbox')) {
+                handleIgnoreAlarmChange(e.target);
             }
         });
     }
@@ -255,6 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="armed" ${state === 'armed' ? 'selected' : ''}>Armed</option>
                 <option value="disarmed" ${state === 'disarmed' ? 'selected' : ''}>Disarmed</option>
             </select>
+            <label class="ignore-alarm-label">
+                <input type="checkbox" class="ignore-alarm-checkbox" ${device.is_ignored ? 'checked' : ''} />
+                Ignore Alarm
+            </label>
         `;
         return li;
     }
@@ -285,12 +281,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(detail ? detail.message : 'Action failed on the server.');
             }
         } catch (error) {
-            // Revert the select value
             selectElement.value = currentState;
             showNotification(error.message, true);
         } finally {
             deviceItem.style.opacity = '1';
             updateBuildingStatus(deviceItem.closest('.building-card'));
+        }
+    }
+
+    async function handleIgnoreAlarmChange(checkbox) {
+        const deviceItem = checkbox.closest('.device-item');
+        const deviceId = parseInt(deviceItem.dataset.deviceId, 10);
+        const action = checkbox.checked ? 'ignore' : 'unignore';
+
+        try {
+            await apiRequest('devices/ignored-alarms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_id: deviceId, action: action })
+            });
+            showNotification(`Device alarm ${action}d successfully.`);
+        } catch (error) {
+            checkbox.checked = !checkbox.checked; // Revert checkbox state
+            showNotification(`Failed to ${action} device alarm.`, true);
         }
     }
 
@@ -316,14 +329,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ device_ids: selectedDevices, action: action })
             });
 
-            // Update UI for successful devices
             result.details.forEach(detail => {
                 if (detail.status === 'Success') {
                     const deviceItem = card.querySelector(`[data-device-id="${detail.device_id}"]`);
                     if (deviceItem) {
                         const newState = action === 'arm' ? 'armed' : 'disarmed';
                         updateDeviceUI(deviceItem, newState);
-                        // Update the select element
                         const select = deviceItem.querySelector('.device-state-select');
                         select.value = newState;
                     }
@@ -338,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showNotification(`${result.failure_count} device(s) failed to ${action}.`, true);
             }
 
-            // Clear selections
             card.querySelectorAll('.device-checkbox:checked').forEach(cb => cb.checked = false);
             
         } finally {

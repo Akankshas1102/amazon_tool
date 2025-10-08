@@ -3,8 +3,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router as device_router
 from config import health_check
+from services.scheduler_service import start_scheduler # <-- THIS LINE IS UPDATED
 
 app = FastAPI(title="Amazon Device Control API")
+
+# Start the scheduler on application startup
+@app.on_event("startup")
+def startup_event():
+    start_scheduler()
 
 # This section gives your frontend permission to access the backend
 origins = [
@@ -29,7 +35,7 @@ def health():
     Provides a simple health check for the service.
     """
     is_healthy = health_check()
-    return {"status": "ok" if is_healthy else "error", 
+    return {"status": "ok" if is_healthy else "error",
             "datastore": "accessible" if is_healthy else "inaccessible"}
 
 @app.get("/")

@@ -12,6 +12,7 @@ class DeviceOut(BaseModel):
     name: str
     state: str
     building_name: str | None = None
+    is_ignored: bool = False # New field for ignored status
 
 class DeviceActionRequest(BaseModel):
     device_ids: List[int] = Field(..., min_items=1)
@@ -30,3 +31,14 @@ class BuildingTimeResponse(BaseModel):
     building_id: int
     scheduled_time: str
     updated: bool
+
+# --- New Models for Ignored Alarms ---
+
+class IgnoredAlarmRequest(BaseModel):
+    device_id: int
+    action: Literal["ignore", "unignore"]
+
+class IgnoredAlarmResponse(BaseModel):
+    device_id: int
+    action: str
+    success: bool
