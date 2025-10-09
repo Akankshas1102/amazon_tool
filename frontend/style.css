@@ -114,7 +114,7 @@ header h1 {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
-    flex: 1;
+    flex-grow: 1;
 }
 
 .toggle-btn {
@@ -128,6 +128,12 @@ header h1 {
     line-height: 28px;
     color: #64748b;
     transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.building-actions {
+    display: flex;
+    gap: 8px;
 }
 
 .building-time-control {
@@ -135,7 +141,6 @@ header h1 {
     align-items: center;
     gap: 8px;
     margin-left: auto;
-    margin-right: 12px;
 }
 
 .time-input {
@@ -179,11 +184,6 @@ header h1 {
     border-radius: 6px;
 }
 
-.bulk-actions {
-    display: flex;
-    gap: 8px;
-}
-
 .bulk-btn {
     padding: 6px 12px;
     border: none;
@@ -191,6 +191,7 @@ header h1 {
     font-size: 12px;
     cursor: pointer;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .bulk-arm {
@@ -228,7 +229,6 @@ header h1 {
     gap: 12px;
     padding: 12px;
     border-bottom: 1px solid #f1f5f9;
-    transition: background-color 0.2s ease;
 }
 
 .device-item:last-child {
@@ -237,12 +237,6 @@ header h1 {
 
 .device-item:hover {
     background-color: #f8fafc;
-}
-
-.device-checkbox {
-    width: 16px;
-    height: 16px;
-    accent-color: #3b82f6;
 }
 
 .device-name {
@@ -257,11 +251,11 @@ header h1 {
     flex-shrink: 0;
 }
 
-.device-state-select {
-    padding: 4px 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    font-size: 12px;
+.ignore-alarm-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
 }
 
 .state-armed { 
@@ -282,6 +276,7 @@ header h1 {
     padding: 4px 8px;
     border-radius: 12px;
     color: #fff;
+    white-space: nowrap;
 }
 
 .status-all-armed { 
@@ -339,18 +334,20 @@ header h1 {
     .building-selector {
         min-width: auto;
     }
+
+    .building-header {
+        flex-wrap: wrap;
+    }
     
     .building-time-control {
         flex-wrap: wrap;
         gap: 4px;
+        width: 100%;
+        margin-top: 10px;
     }
     
     .building-controls {
         flex-direction: column;
         gap: 12px;
-    }
-    
-    .bulk-actions {
-        justify-content: center;
     }
 }

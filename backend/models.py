@@ -1,21 +1,23 @@
+# backend/models.py
+
 from pydantic import BaseModel, Field
 from typing import Literal, List, Optional
-from datetime import time
 
 class BuildingOut(BaseModel):
     id: int
     name: str
-    scheduled_time: Optional[str] = None  # Format: "HH:MM"
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
 class DeviceOut(BaseModel):
     id: int
     name: str
     state: str
     building_name: str | None = None
-    is_ignored: bool = False # New field for ignored status
+    is_ignored: bool = False # Field re-added
 
 class DeviceActionRequest(BaseModel):
-    device_ids: List[int] = Field(..., min_items=1)
+    building_id: int
     action: Literal["arm", "disarm"]
 
 class DeviceActionSummaryResponse(BaseModel):
@@ -25,20 +27,22 @@ class DeviceActionSummaryResponse(BaseModel):
 
 class BuildingTimeRequest(BaseModel):
     building_id: int
-    scheduled_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")  # HH:MM format
+    start_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    end_time: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
 
 class BuildingTimeResponse(BaseModel):
     building_id: int
-    scheduled_time: str
+    start_time: str
+    end_time: Optional[str]
     updated: bool
 
-# --- New Models for Ignored Alarms ---
+# --- New Models for Ignored ProEvents ---
 
-class IgnoredAlarmRequest(BaseModel):
-    device_id: int
+class IgnoredItemRequest(BaseModel):
+    item_id: int
     action: Literal["ignore", "unignore"]
 
-class IgnoredAlarmResponse(BaseModel):
-    device_id: int
+class IgnoredItemResponse(BaseModel):
+    item_id: int
     action: str
     success: bool
