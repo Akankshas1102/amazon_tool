@@ -62,30 +62,42 @@ def get_all_building_times() -> dict:
 
 # --- Ignored ProEvent Functions ---
 
-def get_ignored_proevents() -> list[int]:
-    """Get all proevent IDs from the ignored_proevents table."""
+def get_ignored_proevents() -> dict:
+    """Get all proevent ignore settings."""
     with get_sqlite_connection() as conn:
-        cursor = conn.execute("SELECT proevent_id FROM ignored_proevents")
-        return [row["proevent_id"] for row in cursor.fetchall()]
+        cursor = conn.execute("SELECT proevent_id, ignore_on_arm, ignore_on_disarm FROM ignored_proevents")
+        # Return a dictionary for easy lookup
+        return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in cursor.fetchall()}
 
-def add_ignored_proevent(proevent_id: int) -> bool:
-    """Add a proevent to the ignored_proevents table."""
+def set_proevent_ignore_status(proevent_id: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
+    """Set the ignore status for a specific proevent."""
     try:
         with get_sqlite_connection() as conn:
-            conn.execute("INSERT OR IGNORE INTO ignored_proevents (proevent_id) VALUES (?)", (proevent_id,))
-        logger.info(f"ProEvent {proevent_id} added to ignored list.")
+            conn.execute("""
+                INSERT INTO ignored_proevents (proevent_id, ignore_on_arm, ignore_on_disarm)
+                VALUES (?, ?, ?)
+                ON CONFLICT(proevent_id) DO UPDATE SET
+                    ignore_on_arm = excluded.ignore_on_arm,
+                    ignore_on_disarm = excluded.ignore_on_disarm
+            """, (proevent_id, ignore_on_arm, ignore_on_disarm))
+        logger.info(f"Updated ignore status for ProEvent {proevent_id}")
         return True
     except Exception as e:
-        logger.error(f"Error adding ignored proevent for ID {proevent_id}: {e}")
+        logger.error(f"Error setting ignore status for ProEvent ID {proevent_id}: {e}")
         return False
 
-def remove_ignored_proevent(proevent_id: int) -> bool:
-    """Remove a proevent from the ignored_proevents table."""
+# --- ProEvent History Logging ---
+
+def log_proevent_state(proevent_id: int, state: str) -> bool:
+    """Log a ProEvent's state change to the history table."""
     try:
         with get_sqlite_connection() as conn:
-            conn.execute("DELETE FROM ignored_proevents WHERE proevent_id = ?", (proevent_id,))
-        logger.info(f"ProEvent {proevent_id} removed from ignored list.")
+            conn.execute(
+                "INSERT INTO proevent_state_history (proevent_id, state) VALUES (?, ?)",
+                (proevent_id, state)
+            )
+        logger.info(f"Logged state '{state}' for ProEvent {proevent_id}")
         return True
     except Exception as e:
-        logger.error(f"Error removing ignored proevent for ID {proevent_id}: {e}")
+        logger.error(f"Error logging ProEvent state for ID {proevent_id}: {e}")
         return False

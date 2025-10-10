@@ -38,10 +38,22 @@ def init_sqlite_db():
                 END
             """)
 
-            # New table for ignored proevents
+            # New, more detailed table for ignored proevents
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ignored_proevents (
-                    proevent_id INTEGER PRIMARY KEY
+                    proevent_id INTEGER PRIMARY KEY,
+                    ignore_on_arm BOOLEAN NOT NULL DEFAULT 0,
+                    ignore_on_disarm BOOLEAN NOT NULL DEFAULT 0
+                )
+            """)
+            
+            # New table for ProEvent state history
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS proevent_state_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    proevent_id INTEGER NOT NULL,
+                    state TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             

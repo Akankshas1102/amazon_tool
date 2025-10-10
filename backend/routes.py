@@ -4,9 +4,9 @@ from fastapi import APIRouter, HTTPException, Query
 from services import device_service, proevent_service
 from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse, 
                    BuildingOut, BuildingTimeRequest, BuildingTimeResponse,
-                   IgnoredItemRequest, IgnoredItemResponse) # Added Ignored models
+                   IgnoredItemRequest, IgnoredItemResponse)
 from sqlite_config import (get_building_time, set_building_time, 
-                           get_ignored_proevents, add_ignored_proevent, remove_ignored_proevent) # Import new functions
+                           get_ignored_proevents, set_proevent_ignore_status)
 from logger import get_logger
 
 router = APIRouter()
@@ -14,18 +14,21 @@ logger = get_logger(__name__)
 
 
 @router.get("/buildings", response_model=list[BuildingOut])
-# ... (this function remains the same)
 def list_buildings():
     buildings = device_service.get_distinct_buildings()
-    return [
-        BuildingOut(
+    buildings_out = []
+    for b in buildings:
+        # If start_time or end_time is not set, provide a default value.
+        start_time = b.get("start_time", "09:00")
+        end_time = b.get("end_time", "17:00")
+
+        buildings_out.append(BuildingOut(
             id=b["id"],
             name=b["name"],
-            start_time=b.get("start_time"),
-            end_time=b.get("end_time")
-        )
-        for b in buildings
-    ]
+            start_time=start_time,
+            end_time=end_time
+        ))
+    return buildings_out
 
 
 @router.get("/devices", response_model=list[DeviceOut])
@@ -42,17 +45,18 @@ def list_proevents(
         building_id=building, search=search, limit=limit, offset=offset
     )
     
-    # Get the list of ignored proevents
     ignored_proevents = get_ignored_proevents()
     
     proevents_out = []
     for p in proevents:
+        ignore_status = ignored_proevents.get(p["id"], {})
         proevent_out = DeviceOut(
             id=p["id"],
             name=p["name"],
             state="armed" if p["reactive_state"] == 1 else "disarmed",
             building_name=None,
-            is_ignored=p["id"] in ignored_proevents # Set the is_ignored flag
+            is_ignored_on_arm=ignore_status.get("ignore_on_arm", False),
+            is_ignored_on_disarm=ignore_status.get("ignore_on_disarm", False)
         )
         proevents_out.append(proevent_out)
         
@@ -60,7 +64,6 @@ def list_proevents(
 
 
 @router.post("/devices/action", response_model=DeviceActionSummaryResponse)
-# ... (this function remains the same)
 def device_action(req: DeviceActionRequest):
     action = req.action.lower()
     reactive = 1 if action == "arm" else 0
@@ -84,7 +87,6 @@ def device_action(req: DeviceActionRequest):
 
 
 @router.get("/buildings/{building_id}/time")
-# ... (this function remains the same)
 def get_building_scheduled_time(building_id: int):
     times = get_building_time(building_id)
     return {
@@ -95,7 +97,6 @@ def get_building_scheduled_time(building_id: int):
 
 
 @router.post("/buildings/{building_id}/time", response_model=BuildingTimeResponse)
-# ... (this function remains the same)
 def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
     if request.building_id != building_id:
         raise HTTPException(400, "Building ID in path and body must match")
@@ -109,24 +110,17 @@ def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
         updated=True
     )
 
-# --- New Endpoint for Ignoring ProEvents ---
-
 @router.post("/proevents/ignore", response_model=IgnoredItemResponse)
 def manage_ignored_proevents(req: IgnoredItemRequest):
     """
-    Add or remove a proevent from the ignored list.
+    Set the ignore status for a proevent.
     """
-    success = False
-    if req.action == "ignore":
-        success = add_ignored_proevent(req.item_id)
-    elif req.action == "unignore":
-        success = remove_ignored_proevent(req.item_id)
+    success = set_proevent_ignore_status(req.item_id, req.ignore_on_arm, req.ignore_on_disarm)
     
     if not success:
-        raise HTTPException(500, f"Failed to {req.action} proevent {req.item_id}")
+        raise HTTPException(500, f"Failed to update ignore status for proevent {req.item_id}")
         
     return IgnoredItemResponse(
         item_id=req.item_id,
-        action=req.action,
         success=True
     )

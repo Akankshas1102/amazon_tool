@@ -6,15 +6,16 @@ from typing import Literal, List, Optional
 class BuildingOut(BaseModel):
     id: int
     name: str
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
+    start_time: str
+    end_time: str
 
 class DeviceOut(BaseModel):
     id: int
     name: str
     state: str
-    building_name: str | None = None
-    is_ignored: bool = False # Field re-added
+    building_name: Optional[str] = None
+    is_ignored_on_arm: bool = False
+    is_ignored_on_disarm: bool = False
 
 class DeviceActionRequest(BaseModel):
     building_id: int
@@ -28,7 +29,7 @@ class DeviceActionSummaryResponse(BaseModel):
 class BuildingTimeRequest(BaseModel):
     building_id: int
     start_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
-    end_time: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    end_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
 
 class BuildingTimeResponse(BaseModel):
     building_id: int
@@ -36,13 +37,13 @@ class BuildingTimeResponse(BaseModel):
     end_time: Optional[str]
     updated: bool
 
-# --- New Models for Ignored ProEvents ---
+# --- Models for Ignored ProEvents ---
 
 class IgnoredItemRequest(BaseModel):
     item_id: int
-    action: Literal["ignore", "unignore"]
+    ignore_on_arm: bool
+    ignore_on_disarm: bool
 
 class IgnoredItemResponse(BaseModel):
     item_id: int
-    action: str
     success: bool

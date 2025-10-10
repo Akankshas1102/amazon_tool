@@ -1,29 +1,27 @@
-# backend/services/scheduler_service.py
-
 import schedule
 import time
 import threading
 from logger import get_logger
-from services import proevent_service # Changed from device_service
+from services import device_service
 
 logger = get_logger(__name__)
 
-def check_proevent_states():
+def check_device_states():
     """
-    Job function for the scheduler to check proevent states.
+    Checks the state of all devices and sends notifications for disarmed devices.
     """
-    logger.info("Scheduler running: Checking proevent states...")
+    logger.info("Scheduler running: Checking device states...")
     try:
-        # Calling the new, correct function
-        proevent_service.check_and_notify_disarmed_proevents()
+        device_service.check_and_notify_disarmed_devices()
     except Exception as e:
-        logger.error(f"Error in scheduled proevent check: {e}")
+        logger.error(f"Error in scheduled device check: {e}")
 
 def run_scheduler():
     """
     Runs the scheduler in a separate thread.
     """
-    schedule.every(1).minutes.do(check_proevent_states)
+    # Schedule the job to run every 5 minutes
+    schedule.every(5).minutes.do(check_device_states)
 
     while True:
         schedule.run_pending()

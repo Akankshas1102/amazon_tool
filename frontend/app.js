@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loader = document.getElementById('loader');
     const notification = document.getElementById('notification');
     const buildingSearch = document.querySelector('.building-search');
-    // ... (rest of the initial variables are the same)
     const buildingDropdown = document.querySelector('.building-dropdown');
     const clearFilter = document.querySelector('.clear-filter');
 
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const BUILD_PAGE_SIZE = 100;
 
     function showNotification(text, isError = false, timeout = 3000) {
-        // ... (this function remains the same)
         notification.textContent = text;
         notification.style.backgroundColor = isError ? '#ef4444' : '#333';
         notification.classList.add('show');
@@ -23,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function apiRequest(endpoint, options = {}) {
-        // ... (this function remains the same)
         const url = `${API_BASE_URL}/${endpoint}`;
         try {
             const response = await fetch(url, options);
@@ -40,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupBuildingSelector() {
-        // ... (this function remains the same)
         buildingSearch.addEventListener('input', () => {
             const query = buildingSearch.value.toLowerCase();
             buildingDropdown.innerHTML = '';
@@ -84,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectBuilding(building) {
-        // ... (this function remains the same)
         buildingSearch.value = building.name;
         buildingDropdown.style.display = 'none';
         selectedBuildingId = building.id;
@@ -93,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadFilteredBuilding(building) {
-        // ... (this function remains the same)
         buildingsContainer.innerHTML = '';
         const card = createBuildingCard(building);
         buildingsContainer.appendChild(card);
@@ -105,12 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createBuildingCard(building) {
-        // ... (this function remains the same)
         const card = document.createElement('div');
         card.className = 'building-card';
         card.dataset.buildingId = building.id;
         const startTime = building.start_time || '09:00';
-        const endTime = building.end_time || '';
+        const endTime = building.end_time || '17:00';
 
         card.innerHTML = `
             <div class="building-header">
@@ -124,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label>Start:</label>
                     <input type="time" class="time-input start-time-input" value="${startTime}" required />
                     <label>End:</label>
-                    <input type="time" class="time-input end-time-input" value="${endTime}" />
+                    <input type="time" class="time-input end-time-input" value="${endTime}" required />
                     <button class="time-save-btn">Save</button>
                 </div>
                 <div class="building-status"></div>
@@ -142,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupBuildingCardEvents(card) {
-        // Add event listener for the ignore checkbox
         const itemsList = card.querySelector('.items-list');
         itemsList.addEventListener('change', (e) => {
             if (e.target.classList.contains('ignore-item-checkbox')) {
@@ -150,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // ... (rest of the function remains the same)
         const header = card.querySelector('.building-header');
         const body = card.querySelector('.building-body');
         const toggleBtn = card.querySelector('.toggle-btn');
@@ -178,13 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         timeSaveBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            // ... (rest of logic is the same)
             const buildingId = parseInt(card.dataset.buildingId);
             const startTime = startTimeInput.value;
             const endTime = endTimeInput.value;
             
-            if (!startTime) {
-                showNotification('Please select a valid start time', true);
+            if (!startTime || !endTime) {
+                showNotification('Both start and end times are required.', true);
                 return;
             }
 
@@ -195,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         building_id: buildingId,
                         start_time: startTime,
-                        end_time: endTime || null
+                        end_time: endTime
                     })
                 });
                 showNotification('Building schedule updated successfully');
@@ -206,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let searchDebounceTimer;
         itemSearch.addEventListener('input', () => {
-            // ... (rest of logic is the same)
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
                 loadItemsForBuilding(card, true, itemSearch.value.trim());
@@ -225,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadItemsForBuilding(card, reset = false, search = '') {
-        // ... (this function remains the same)
         const buildingId = card.dataset.buildingId;
         const itemsList = card.querySelector('.items-list');
         const loader = card.querySelector('.building-loader');
@@ -247,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createItem(item) {
-        // Updated to include the ignore checkbox
         const li = document.createElement('li');
         const state = (item.state || 'unknown').toLowerCase();
         li.className = 'device-item';
@@ -256,39 +243,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const stateClass = state === 'armed' ? 'state-armed' : (state === 'disarmed' ? 'state-disarmed' : 'state-unknown');
 
-        // Checkbox is checked based on the is_ignored flag from the API
         li.innerHTML = `
             <span class="device-state-indicator ${stateClass}"></span>
             <div class="device-name">${escapeHtml(item.name)} (ID: ${item.id})</div>
             <label class="ignore-alarm-label">
-                <input type="checkbox" class="ignore-item-checkbox" ${item.is_ignored ? 'checked' : ''} />
-                Ignore Alarm
+                <input type="checkbox" class="ignore-item-checkbox ignore-on-arm" ${item.is_ignored_on_arm ? 'checked' : ''} />
+                Ignore when Armed
+            </label>
+            <label class="ignore-alarm-label">
+                <input type="checkbox" class="ignore-item-checkbox ignore-on-disarm" ${item.is_ignored_on_disarm ? 'checked' : ''} />
+                Ignore when Disarmed
             </label>
         `;
         return li;
     }
     
-    // New function to handle the ignore action
     async function handleIgnoreChange(checkbox) {
         const itemLi = checkbox.closest('.device-item');
         const itemId = parseInt(itemLi.dataset.itemId, 10);
-        const action = checkbox.checked ? 'ignore' : 'unignore';
+        const ignoreOnArm = itemLi.querySelector('.ignore-on-arm').checked;
+        const ignoreOnDisarm = itemLi.querySelector('.ignore-on-disarm').checked;
 
         try {
             await apiRequest('proevents/ignore', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ item_id: itemId, action: action })
+                body: JSON.stringify({
+                    item_id: itemId,
+                    ignore_on_arm: ignoreOnArm,
+                    ignore_on_disarm: ignoreOnDisarm
+                })
             });
-            showNotification(`ProEvent ${action}d successfully.`);
+            showNotification(`ProEvent ignore settings updated.`);
         } catch (error) {
-            checkbox.checked = !checkbox.checked; // Revert checkbox on failure
-            showNotification(`Failed to ${action} proevent.`, true);
+            checkbox.checked = !checkbox.checked; // Revert the clicked checkbox on failure
+            showNotification(`Failed to update ignore settings.`, true);
         }
     }
 
     async function performBuildingAction(card, action) {
-        // ... (this function remains the same)
         const buildingId = parseInt(card.dataset.buildingId, 10);
         const armBtn = card.querySelector('.bulk-arm');
         const disarmBtn = card.querySelector('.bulk-disarm');
@@ -315,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateBuildingStatus(card) {
-        // ... (this function remains the same)
         const items = card.querySelectorAll('.device-item');
         const statusEl = card.querySelector('.building-status');
         
@@ -340,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function escapeHtml(str) {
-        // ... (this function remains the same)
         return String(str || '').replace(/[&<>"']/g, s => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;',
             '"': '&quot;', "'": '&#39;'
@@ -348,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadAllBuildings() {
-        // ... (this function remains the same)
         try {
             loader.style.display = 'block';
             allBuildings = await apiRequest('buildings');
@@ -362,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initialize() {
-        // ... (this function remains the same)
         setupBuildingSelector();
         await loadAllBuildings();
     }
