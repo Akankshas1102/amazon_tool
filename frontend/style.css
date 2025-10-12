@@ -258,16 +258,16 @@ header h1 {
     cursor: pointer;
 }
 
-.state-armed { 
-    background-color: #22c55e; 
+.state-armed {
+    background-color: #22c55e;
 }
 
-.state-disarmed { 
-    background-color: #9ca3af; 
+.state-disarmed {
+    background-color: #9ca3af;
 }
 
-.state-unknown { 
-    background-color: #f59e0b; 
+.state-unknown {
+    background-color: #f59e0b;
 }
 
 .building-status {
@@ -279,16 +279,16 @@ header h1 {
     white-space: nowrap;
 }
 
-.status-all-armed { 
-    background-color: #22c55e; 
+.status-all-armed {
+    background-color: #22c55e;
 }
 
-.status-partial-armed { 
-    background-color: #f59e0b; 
+.status-partial-armed {
+    background-color: #f59e0b;
 }
 
-.status-none-armed { 
-    background-color: #6b7280; 
+.status-none-armed {
+    background-color: #6b7280;
 }
 
 .notification {
@@ -324,13 +324,60 @@ header h1 {
     font-style: italic;
 }
 
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-item-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
 @media (max-width: 768px) {
     .header-controls {
         flex-direction: column;
         gap: 8px;
         align-items: stretch;
     }
-    
+
     .building-selector {
         min-width: auto;
     }
@@ -338,14 +385,14 @@ header h1 {
     .building-header {
         flex-wrap: wrap;
     }
-    
+
     .building-time-control {
         flex-wrap: wrap;
         gap: 4px;
         width: 100%;
         margin-top: 10px;
     }
-    
+
     .building-controls {
         flex-direction: column;
         gap: 12px;

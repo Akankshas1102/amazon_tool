@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildingSearch = document.querySelector('.building-search');
     const buildingDropdown = document.querySelector('.building-dropdown');
     const clearFilter = document.querySelector('.clear-filter');
+    const ignoreModal = document.getElementById('ignoreModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalItemList = document.getElementById('modalItemList');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const closeButton = document.querySelector('.close-button');
+
 
     let allBuildings = [];
     let selectedBuildingId = null;
@@ -40,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
         buildingSearch.addEventListener('input', () => {
             const query = buildingSearch.value.toLowerCase();
             buildingDropdown.innerHTML = '';
-            
+
             if (query.length === 0) {
                 buildingDropdown.style.display = 'none';
                 clearFilter.style.display = 'none';
                 return;
             }
 
-            const filtered = allBuildings.filter(b => 
+            const filtered = allBuildings.filter(b =>
                 b.name.toLowerCase().includes(query)
             );
 
@@ -172,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const buildingId = parseInt(card.dataset.buildingId);
             const startTime = startTimeInput.value;
             const endTime = endTimeInput.value;
-            
+
             if (!startTime || !endTime) {
                 showNotification('Both start and end times are required.', true);
                 return;
@@ -204,12 +211,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         armBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            performBuildingAction(card, 'arm');
+            showIgnoreSelectionModal(card.dataset.buildingId, 'arm');
         });
 
         disarmBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            performBuildingAction(card, 'disarm');
+            showIgnoreSelectionModal(card.dataset.buildingId, 'disarm');
         });
     }
 
@@ -217,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const buildingId = card.dataset.buildingId;
         const itemsList = card.querySelector('.items-list');
         const loader = card.querySelector('.building-loader');
-        
+
         if (reset) itemsList.innerHTML = '';
         loader.style.display = 'block';
 
@@ -257,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         return li;
     }
-    
+
     async function handleIgnoreChange(checkbox) {
         const itemLi = checkbox.closest('.device-item');
         const itemId = parseInt(itemLi.dataset.itemId, 10);
@@ -281,36 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function performBuildingAction(card, action) {
-        const buildingId = parseInt(card.dataset.buildingId, 10);
-        const armBtn = card.querySelector('.bulk-arm');
-        const disarmBtn = card.querySelector('.bulk-disarm');
-        
-        armBtn.disabled = true;
-        disarmBtn.disabled = true;
-
-        try {
-            await apiRequest('devices/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ building_id: buildingId, action: action })
-            });
-            showNotification(`Building ${action}ed successfully. Refreshing...`);
-            setTimeout(() => {
-                loadItemsForBuilding(card, true, card.querySelector('.item-search').value.trim());
-            }, 1500);
-        } catch(error) {
-            showNotification(`Failed to ${action} building.`, true)
-        } finally {
-            armBtn.disabled = false;
-            disarmBtn.disabled = false;
-        }
-    }
-
     function updateBuildingStatus(card) {
         const items = card.querySelectorAll('.device-item');
         const statusEl = card.querySelector('.building-status');
-        
+
         if (items.length === 0) {
             statusEl.textContent = 'No ProEvents';
             statusEl.className = 'building-status status-none-armed';
@@ -337,6 +318,78 @@ document.addEventListener('DOMContentLoaded', () => {
             '"': '&quot;', "'": '&#39;'
         }[s]));
     }
+
+    async function showIgnoreSelectionModal(buildingId, action) {
+        modalTitle.textContent = `Select proevents to ignore when ${action}ing`;
+        modalItemList.innerHTML = '<div class="loader">Loading...</div>';
+        ignoreModal.style.display = 'block';
+
+        const items = await apiRequest(`devices?building=${buildingId}&limit=1000`);
+        modalItemList.innerHTML = '';
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'device-item';
+            div.dataset.itemId = item.id;
+            div.innerHTML = `
+                <div class="device-name">${escapeHtml(item.name)}</div>
+                <label class="ignore-alarm-label">
+                    <input type="checkbox" class="ignore-item-checkbox" ${item.is_ignored_on_disarm && action === 'disarm' || item.is_ignored_on_arm && action === 'arm' ? 'checked' : ''} />
+                    Ignore
+                </label>
+            `;
+            modalItemList.appendChild(div);
+        });
+
+        modalConfirmBtn.onclick = async () => {
+            const selectedItems = [];
+            const itemElements = modalItemList.querySelectorAll('.device-item');
+            itemElements.forEach(itemEl => {
+                const checkbox = itemEl.querySelector('.ignore-item-checkbox');
+                const itemId = parseInt(itemEl.dataset.itemId, 10);
+                let ignoreOnArm = action === 'arm' && checkbox.checked;
+                let ignoreOnDisarm = action === 'disarm' && checkbox.checked;
+
+                const originalItem = items.find(i => i.id === itemId);
+                if (action === 'disarm') {
+                    ignoreOnArm = originalItem.is_ignored_on_arm;
+                } else {
+                    ignoreOnDisarm = originalItem.is_ignored_on_disarm;
+                }
+
+                selectedItems.push({
+                    item_id: itemId,
+                    ignore_on_arm: ignoreOnArm,
+                    ignore_on_disarm: ignoreOnDisarm
+                });
+            });
+
+            try {
+                await apiRequest('proevents/ignore/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: selectedItems })
+                });
+                showNotification('Ignore settings updated successfully.');
+                // Refresh the building view
+                const card = document.querySelector(`.building-card[data-building-id='${buildingId}']`);
+                if (card) {
+                    loadItemsForBuilding(card, true);
+                }
+            } catch (error) {
+                showNotification('Failed to update ignore settings.', true);
+            } finally {
+                ignoreModal.style.display = 'none';
+            }
+        };
+
+        modalCancelBtn.onclick = () => {
+            ignoreModal.style.display = 'none';
+        };
+        closeButton.onclick = () => {
+            ignoreModal.style.display = 'none';
+        }
+    }
+
 
     async function loadAllBuildings() {
         try {

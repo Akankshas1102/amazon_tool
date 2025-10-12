@@ -2,10 +2,10 @@
 
 from fastapi import APIRouter, HTTPException, Query
 from services import device_service, proevent_service
-from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse, 
+from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse,
                    BuildingOut, BuildingTimeRequest, BuildingTimeResponse,
-                   IgnoredItemRequest, IgnoredItemResponse)
-from sqlite_config import (get_building_time, set_building_time, 
+                   IgnoredItemRequest, IgnoredItemResponse, IgnoredItemBulkRequest)
+from sqlite_config import (get_building_time, set_building_time,
                            get_ignored_proevents, set_proevent_ignore_status)
 from logger import get_logger
 
@@ -44,9 +44,9 @@ def list_proevents(
     proevents = proevent_service.get_all_proevents_for_building(
         building_id=building, search=search, limit=limit, offset=offset
     )
-    
+
     ignored_proevents = get_ignored_proevents()
-    
+
     proevents_out = []
     for p in proevents:
         ignore_status = ignored_proevents.get(p["id"], {})
@@ -59,7 +59,7 @@ def list_proevents(
             is_ignored_on_disarm=ignore_status.get("ignore_on_disarm", False)
         )
         proevents_out.append(proevent_out)
-        
+
     return proevents_out
 
 
@@ -116,11 +116,21 @@ def manage_ignored_proevents(req: IgnoredItemRequest):
     Set the ignore status for a proevent.
     """
     success = set_proevent_ignore_status(req.item_id, req.ignore_on_arm, req.ignore_on_disarm)
-    
+
     if not success:
         raise HTTPException(500, f"Failed to update ignore status for proevent {req.item_id}")
-        
+
     return IgnoredItemResponse(
         item_id=req.item_id,
         success=True
     )
+
+@router.post("/proevents/ignore/bulk")
+def manage_ignored_proevents_bulk(req: IgnoredItemBulkRequest):
+    """
+    Set the ignore status for multiple proevents.
+    """
+    for item in req.items:
+        set_proevent_ignore_status(item.item_id, item.ignore_on_arm, item.ignore_on_disarm)
+
+    return {"status": "success"}

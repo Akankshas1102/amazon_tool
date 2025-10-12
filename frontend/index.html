@@ -24,6 +24,18 @@
         </main>
         <div id="notification" class="notification"></div>
     </div>
+
+    <div id="ignoreModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <div id="modalItemList" class="modal-item-list"></div>
+            <div class="modal-actions">
+                <button id="modalConfirmBtn" class="bulk-btn">Confirm</button>
+                <button id="modalCancelBtn" class="bulk-btn bulk-disarm">Cancel</button>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

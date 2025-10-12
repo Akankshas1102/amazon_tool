@@ -47,3 +47,6 @@ class IgnoredItemRequest(BaseModel):
 class IgnoredItemResponse(BaseModel):
     item_id: int
     success: bool
+
+class IgnoredItemBulkRequest(BaseModel):
+    items: List[IgnoredItemRequest]
