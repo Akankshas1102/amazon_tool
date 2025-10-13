@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConfirmBtn = document.getElementById('modalConfirmBtn');
     const modalCancelBtn = document.getElementById('modalCancelBtn');
     const closeButton = document.querySelector('.close-button');
+    const modalSearch = document.getElementById('modalSearch');
+    const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
 
 
     let allBuildings = [];
@@ -143,12 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupBuildingCardEvents(card) {
         const itemsList = card.querySelector('.items-list');
-        itemsList.addEventListener('change', (e) => {
-            if (e.target.classList.contains('ignore-item-checkbox')) {
-                handleIgnoreChange(e.target);
-            }
-        });
-
         const header = card.querySelector('.building-header');
         const body = card.querySelector('.building-body');
         const toggleBtn = card.querySelector('.toggle-btn');
@@ -253,39 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
         li.innerHTML = `
             <span class="device-state-indicator ${stateClass}"></span>
             <div class="device-name">${escapeHtml(item.name)} (ID: ${item.id})</div>
-            <label class="ignore-alarm-label">
-                <input type="checkbox" class="ignore-item-checkbox ignore-on-arm" ${item.is_ignored_on_arm ? 'checked' : ''} />
-                Ignore when Armed
-            </label>
-            <label class="ignore-alarm-label">
-                <input type="checkbox" class="ignore-item-checkbox ignore-on-disarm" ${item.is_ignored_on_disarm ? 'checked' : ''} />
-                Ignore when Disarmed
-            </label>
         `;
         return li;
-    }
-
-    async function handleIgnoreChange(checkbox) {
-        const itemLi = checkbox.closest('.device-item');
-        const itemId = parseInt(itemLi.dataset.itemId, 10);
-        const ignoreOnArm = itemLi.querySelector('.ignore-on-arm').checked;
-        const ignoreOnDisarm = itemLi.querySelector('.ignore-on-disarm').checked;
-
-        try {
-            await apiRequest('proevents/ignore', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    item_id: itemId,
-                    ignore_on_arm: ignoreOnArm,
-                    ignore_on_disarm: ignoreOnDisarm
-                })
-            });
-            showNotification(`ProEvent ignore settings updated.`);
-        } catch (error) {
-            checkbox.checked = !checkbox.checked; // Revert the clicked checkbox on failure
-            showNotification(`Failed to update ignore settings.`, true);
-        }
     }
 
     function updateBuildingStatus(card) {
@@ -323,6 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle.textContent = `Select proevents to ignore when ${action}ing`;
         modalItemList.innerHTML = '<div class="loader">Loading...</div>';
         ignoreModal.style.display = 'block';
+        
+        // Reset modal controls
+        modalSearch.value = '';
+        modalSelectAllBtn.textContent = 'Select All';
 
         const items = await apiRequest(`devices?building=${buildingId}&limit=1000`);
         modalItemList.innerHTML = '';
@@ -339,6 +308,31 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             modalItemList.appendChild(div);
         });
+        
+        // --- Event Handlers for new modal features ---
+        
+        modalSearch.oninput = () => {
+            const query = modalSearch.value.toLowerCase();
+            const modalItems = modalItemList.querySelectorAll('.device-item');
+            modalItems.forEach(item => {
+                const name = item.querySelector('.device-name').textContent.toLowerCase();
+                item.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+            modalSelectAllBtn.textContent = 'Select All'; // Reset button on search
+        };
+        
+        modalSelectAllBtn.onclick = () => {
+            const isSelectAll = modalSelectAllBtn.textContent === 'Select All';
+            const modalItems = modalItemList.querySelectorAll('.device-item');
+            modalItems.forEach(item => {
+                // Only toggle checkboxes for visible items
+                if (item.style.display !== 'none') {
+                    const checkbox = item.querySelector('.ignore-item-checkbox');
+                    if (checkbox) checkbox.checked = isSelectAll;
+                }
+            });
+            modalSelectAllBtn.textContent = isSelectAll ? 'Deselect All' : 'Select All';
+        };
 
         modalConfirmBtn.onclick = async () => {
             const selectedItems = [];
@@ -378,16 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 showNotification('Failed to update ignore settings.', true);
             } finally {
-                ignoreModal.style.display = 'none';
+                closeModal();
             }
         };
-
-        modalCancelBtn.onclick = () => {
+        
+        const closeModal = () => {
             ignoreModal.style.display = 'none';
+            // Clear event handlers to prevent memory leaks
+            modalSearch.oninput = null;
+            modalSelectAllBtn.onclick = null;
+            modalConfirmBtn.onclick = null;
         };
-        closeButton.onclick = () => {
-            ignoreModal.style.display = 'none';
-        }
+
+        modalCancelBtn.onclick = closeModal;
+        closeButton.onclick = closeModal;
     }
 
 
