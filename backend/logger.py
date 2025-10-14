@@ -1,19 +1,18 @@
 import logging
-import sys
+from logging.handlers import RotatingFileHandler
 
 def get_logger(name: str):
     """
-    Configures and returns a logger.
+    Configures and returns a logger that writes to app.log.
     """
-    # Create a logger with the specified name
     logger = logging.getLogger(name)
     
-    # This check prevents adding handlers multiple times, which would cause duplicate log messages
+    # This check prevents adding handlers multiple times
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
         
-        # Create a handler to print log messages to the console (standard output)
-        handler = logging.StreamHandler(sys.stdout)
+        # Create a file handler to log to a file, replacing the console handler
+        handler = RotatingFileHandler("app.log", maxBytes=1024 * 1024, backupCount=5)
         handler.setLevel(logging.DEBUG)
         
         # Create a formatter to define the structure of the log messages

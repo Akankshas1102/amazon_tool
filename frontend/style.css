@@ -249,6 +249,7 @@ header h1 {
     height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
+    background-color: #9ca3af; /* Set a default color */
 }
 
 .ignore-alarm-label {
@@ -256,14 +257,6 @@ header h1 {
     align-items: center;
     gap: 6px;
     cursor: pointer;
-}
-
-.state-armed {
-    background-color: #22c55e;
-}
-
-.state-disarmed {
-    background-color: #9ca3af;
 }
 
 .state-unknown {

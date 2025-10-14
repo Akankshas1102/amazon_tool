@@ -26,6 +26,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "m00se_1234")
 # URL-encode the driver string to handle spaces
 encoded_driver = quote_plus(DB_DRIVER)
 
+# DB_SERVER = os.getenv("DB_SERVER", "10.192.0.173\\SQLEXPRESS")
 CONNECTION_STRING = (
     f"mssql+pyodbc://{DB_USER}:{DB_PASSWORD}@{DB_SERVER}/{DB_NAME}"
     f"?driver={encoded_driver}"
@@ -86,4 +87,3 @@ def execute_query(query: str, params: dict = None):
     with engine.begin() as conn:  # begin ensures commit/rollback
         result = conn.execute(text(query), params or {})
         return result.rowcount
-

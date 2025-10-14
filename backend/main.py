@@ -3,13 +3,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router as device_router
 from config import health_check
-from services.scheduler_service import start_scheduler # <-- THIS LINE IS UPDATED
+from services.scheduler_service import start_scheduler
+from logger import get_logger
 
+# Create the logger instance at the top of the file
+logger = get_logger(__name__)
 app = FastAPI(title="Amazon Device Control API")
 
 # Start the scheduler on application startup
 @app.on_event("startup")
 def startup_event():
+    logger.info("Application startup event triggered.")
     start_scheduler()
 
 # This section gives your frontend permission to access the backend
@@ -34,7 +38,14 @@ def health():
     """
     Provides a simple health check for the service.
     """
+    logger.info("Health check endpoint was called.")
     is_healthy = health_check()
+    
+    if is_healthy:
+        logger.info("Database health check successful.")
+    else:
+        logger.warning("Database health check failed.")
+        
     return {"status": "ok" if is_healthy else "error",
             "datastore": "accessible" if is_healthy else "inaccessible"}
 
@@ -43,8 +54,10 @@ def root():
     """
     Root endpoint with a welcome message.
     """
+    logger.info("Root endpoint was called.")
     return {"message": "Welcome to the Amazon Device Control API"}
 
 # This block allows the script to be run directly and starts the server.
 if __name__ == "__main__":
+    logger.info("Starting Uvicorn server.")
     uvicorn.run(app, host="127.0.0.1", port=8000)

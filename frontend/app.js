@@ -37,7 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
                 throw new Error(errorData.detail || `Request failed with status ${response.status}`);
             }
-            return await response.json();
+            // For POST requests that might not return JSON
+            if (response.status === 200 && response.headers.get('content-length') !== '0') {
+                 return await response.json();
+            }
+            return {}; // Return empty object for non-json responses
         } catch (error) {
             console.error(`API request to ${endpoint} failed:`, error);
             showNotification(error.message, true);
@@ -340,18 +344,24 @@ document.addEventListener('DOMContentLoaded', () => {
             itemElements.forEach(itemEl => {
                 const checkbox = itemEl.querySelector('.ignore-item-checkbox');
                 const itemId = parseInt(itemEl.dataset.itemId, 10);
-                let ignoreOnArm = action === 'arm' && checkbox.checked;
-                let ignoreOnDisarm = action === 'disarm' && checkbox.checked;
-
+                
                 const originalItem = items.find(i => i.id === itemId);
-                if (action === 'disarm') {
-                    ignoreOnArm = originalItem.is_ignored_on_arm;
-                } else {
-                    ignoreOnDisarm = originalItem.is_ignored_on_disarm;
+
+                // Start with the original values to preserve the other state
+                let ignoreOnArm = originalItem.is_ignored_on_arm;
+                let ignoreOnDisarm = originalItem.is_ignored_on_disarm;
+
+                // **FIXED LOGIC**: Only update the relevant ignore flag based on the action
+                if (action === 'arm') {
+                    ignoreOnArm = checkbox.checked;
+                } else { // action === 'disarm'
+                    ignoreOnDisarm = checkbox.checked;
                 }
 
                 selectedItems.push({
                     item_id: itemId,
+                    building_frk: parseInt(buildingId),
+                    device_prk: itemId, // Using item_id as a placeholder for device_prk
                     ignore_on_arm: ignoreOnArm,
                     ignore_on_disarm: ignoreOnDisarm
                 });
@@ -367,7 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Refresh the building view
                 const card = document.querySelector(`.building-card[data-building-id='${buildingId}']`);
                 if (card) {
-                    loadItemsForBuilding(card, true);
+                    const itemSearch = card.querySelector('.item-search');
+                    loadItemsForBuilding(card, true, itemSearch.value.trim());
                 }
             } catch (error) {
                 showNotification('Failed to update ignore settings.', true);

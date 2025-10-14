@@ -37,10 +37,12 @@ class BuildingTimeResponse(BaseModel):
     end_time: Optional[str]
     updated: bool
 
-# --- Models for Ignored ProEvents ---
+# --- UPDATED Models for Ignored ProEvents ---
 
 class IgnoredItemRequest(BaseModel):
     item_id: int
+    building_frk: int  # Added
+    device_prk: int    # Added
     ignore_on_arm: bool
     ignore_on_disarm: bool
 

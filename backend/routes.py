@@ -54,7 +54,7 @@ def list_proevents(
             id=p["id"],
             name=p["name"],
             state="armed" if p["reactive_state"] == 1 else "disarmed",
-            building_name=None,
+            building_name=None, # You might want to populate this from the building table
             is_ignored_on_arm=ignore_status.get("ignore_on_arm", False),
             is_ignored_on_disarm=ignore_status.get("ignore_on_disarm", False)
         )
@@ -110,12 +110,15 @@ def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
         updated=True
     )
 
+# UPDATED: Endpoint to handle new data
 @router.post("/proevents/ignore", response_model=IgnoredItemResponse)
 def manage_ignored_proevents(req: IgnoredItemRequest):
     """
     Set the ignore status for a proevent.
     """
-    success = set_proevent_ignore_status(req.item_id, req.ignore_on_arm, req.ignore_on_disarm)
+    success = set_proevent_ignore_status(
+        req.item_id, req.building_frk, req.device_prk, req.ignore_on_arm, req.ignore_on_disarm
+    )
 
     if not success:
         raise HTTPException(500, f"Failed to update ignore status for proevent {req.item_id}")
@@ -125,12 +128,15 @@ def manage_ignored_proevents(req: IgnoredItemRequest):
         success=True
     )
 
+# UPDATED: Endpoint to handle new data
 @router.post("/proevents/ignore/bulk")
 def manage_ignored_proevents_bulk(req: IgnoredItemBulkRequest):
     """
     Set the ignore status for multiple proevents.
     """
     for item in req.items:
-        set_proevent_ignore_status(item.item_id, item.ignore_on_arm, item.ignore_on_disarm)
+        set_proevent_ignore_status(
+            item.item_id, item.building_frk, item.device_prk, item.ignore_on_arm, item.ignore_on_disarm
+        )
 
     return {"status": "success"}

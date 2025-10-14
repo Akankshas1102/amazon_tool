@@ -69,17 +69,20 @@ def get_ignored_proevents() -> dict:
         # Return a dictionary for easy lookup
         return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in cursor.fetchall()}
 
-def set_proevent_ignore_status(proevent_id: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
+# UPDATED: Function to handle new columns
+def set_proevent_ignore_status(proevent_id: int, building_frk: int, device_prk: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
     """Set the ignore status for a specific proevent."""
     try:
         with get_sqlite_connection() as conn:
             conn.execute("""
-                INSERT INTO ignored_proevents (proevent_id, ignore_on_arm, ignore_on_disarm)
-                VALUES (?, ?, ?)
+                INSERT INTO ignored_proevents (proevent_id, building_frk, device_prk, ignore_on_arm, ignore_on_disarm)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(proevent_id) DO UPDATE SET
+                    building_frk = excluded.building_frk,
+                    device_prk = excluded.device_prk,
                     ignore_on_arm = excluded.ignore_on_arm,
                     ignore_on_disarm = excluded.ignore_on_disarm
-            """, (proevent_id, ignore_on_arm, ignore_on_disarm))
+            """, (proevent_id, building_frk, device_prk, ignore_on_arm, ignore_on_disarm))
         logger.info(f"Updated ignore status for ProEvent {proevent_id}")
         return True
     except Exception as e:
@@ -88,13 +91,14 @@ def set_proevent_ignore_status(proevent_id: int, ignore_on_arm: bool, ignore_on_
 
 # --- ProEvent History Logging ---
 
-def log_proevent_state(proevent_id: int, state: str) -> bool:
+# UPDATED: Function to handle new column
+def log_proevent_state(proevent_id: int, building_frk: int, state: str) -> bool:
     """Log a ProEvent's state change to the history table."""
     try:
         with get_sqlite_connection() as conn:
             conn.execute(
-                "INSERT INTO proevent_state_history (proevent_id, state) VALUES (?, ?)",
-                (proevent_id, state)
+                "INSERT INTO proevent_state_history (proevent_id, building_frk, state) VALUES (?, ?, ?)",
+                (proevent_id, building_frk, state)
             )
         logger.info(f"Logged state '{state}' for ProEvent {proevent_id}")
         return True
