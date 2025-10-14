@@ -27,7 +27,6 @@ def get_sqlite_connection():
 # --- Building Schedule Functions ---
 
 def get_building_time(building_id: int) -> dict | None:
-    # ... (this function remains the same)
     with get_sqlite_connection() as conn:
         cursor = conn.execute(
             "SELECT start_time, end_time FROM building_times WHERE building_id = ?",
@@ -37,25 +36,37 @@ def get_building_time(building_id: int) -> dict | None:
         return dict(row) if row else None
 
 def set_building_time(building_id: int, start_time: str, end_time: str | None) -> bool:
-    # ... (this function remains the same)
+    """
+    UPDATED: Ensures start and end times are correctly inserted or updated.
+    """
     try:
         with get_sqlite_connection() as conn:
-            conn.execute("""
-                INSERT INTO building_times (building_id, start_time, end_time)
-                VALUES (?, ?, ?)
-                ON CONFLICT(building_id) DO UPDATE SET 
-                    start_time = excluded.start_time,
-                    end_time = excluded.end_time,
-                    updated_at = CURRENT_TIMESTAMP
-            """, (building_id, start_time, end_time))
-        logger.info(f"Building {building_id} scheduled time updated to {start_time} - {end_time}")
+            # First, check if the building exists
+            cursor = conn.execute("SELECT building_id FROM building_times WHERE building_id = ?", (building_id,))
+            exists = cursor.fetchone()
+
+            if exists:
+                # If it exists, perform an UPDATE
+                conn.execute("""
+                    UPDATE building_times 
+                    SET start_time = ?, end_time = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE building_id = ?
+                """, (start_time, end_time, building_id))
+                logger.info(f"Updated schedule for building {building_id} to {start_time} - {end_time}")
+            else:
+                # If it does not exist, perform an INSERT
+                conn.execute("""
+                    INSERT INTO building_times (building_id, start_time, end_time)
+                    VALUES (?, ?, ?)
+                """, (building_id, start_time, end_time))
+                logger.info(f"Inserted new schedule for building {building_id}: {start_time} - {end_time}")
         return True
     except Exception as e:
-        logger.error(f"Error setting building time: {e}")
+        logger.error(f"Error setting building time for ID {building_id}: {e}")
         return False
 
+
 def get_all_building_times() -> dict:
-    # ... (this function remains the same)
     with get_sqlite_connection() as conn:
         cursor = conn.execute("SELECT building_id, start_time, end_time FROM building_times")
         return {row["building_id"]: {"start_time": row["start_time"], "end_time": row["end_time"]} for row in cursor.fetchall()}
@@ -66,10 +77,8 @@ def get_ignored_proevents() -> dict:
     """Get all proevent ignore settings."""
     with get_sqlite_connection() as conn:
         cursor = conn.execute("SELECT proevent_id, ignore_on_arm, ignore_on_disarm FROM ignored_proevents")
-        # Return a dictionary for easy lookup
         return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in cursor.fetchall()}
 
-# UPDATED: Function to handle new columns
 def set_proevent_ignore_status(proevent_id: int, building_frk: int, device_prk: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
     """Set the ignore status for a specific proevent."""
     try:
@@ -91,7 +100,6 @@ def set_proevent_ignore_status(proevent_id: int, building_frk: int, device_prk: 
 
 # --- ProEvent History Logging ---
 
-# UPDATED: Function to handle new column
 def log_proevent_state(proevent_id: int, building_frk: int, state: str) -> bool:
     """Log a ProEvent's state change to the history table."""
     try:
