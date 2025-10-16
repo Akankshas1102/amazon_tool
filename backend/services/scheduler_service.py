@@ -4,7 +4,8 @@ import schedule
 import time
 import threading
 from logger import get_logger
-from services import proevent_service 
+from services import proevent_service
+import traceback  # Import the traceback module
 
 logger = get_logger(__name__)
 
@@ -14,16 +15,16 @@ def scheduled_job():
     """
     logger.info("Scheduler running: Managing scheduled states...")
     try:
-        # Calling the new, more descriptive function name
         proevent_service.check_and_manage_scheduled_states()
     except Exception as e:
-        logger.error(f"Error in scheduled proevent check: {e}")
+        # Log the full traceback to pinpoint the exact line of the error
+        tb_str = traceback.format_exc()
+        logger.error(f"Error in scheduled proevent check: {e}\n{tb_str}")
 
 def run_scheduler():
     """
     Runs the scheduler in a separate thread.
     """
-    # The job function is now scheduled_job
     schedule.every(1).minutes.do(scheduled_job)
 
     while True:

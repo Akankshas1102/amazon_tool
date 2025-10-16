@@ -48,7 +48,7 @@ def set_building_time(building_id: int, start_time: str, end_time: str | None) -
             if exists:
                 # If it exists, perform an UPDATE
                 conn.execute("""
-                    UPDATE building_times 
+                    UPDATE building_times
                     SET start_time = ?, end_time = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE building_id = ?
                 """, (start_time, end_time, building_id))
@@ -67,17 +67,26 @@ def set_building_time(building_id: int, start_time: str, end_time: str | None) -
 
 
 def get_all_building_times() -> dict:
+    """
+    UPDATED: Ensures an empty dictionary is returned if no schedules are found.
+    """
     with get_sqlite_connection() as conn:
         cursor = conn.execute("SELECT building_id, start_time, end_time FROM building_times")
-        return {row["building_id"]: {"start_time": row["start_time"], "end_time": row["end_time"]} for row in cursor.fetchall()}
+        rows = cursor.fetchall()
+        # Explicitly check for rows before creating the dictionary
+        return {row["building_id"]: {"start_time": row["start_time"], "end_time": row["end_time"]} for row in rows} if rows else {}
 
 # --- Ignored ProEvent Functions ---
 
 def get_ignored_proevents() -> dict:
-    """Get all proevent ignore settings."""
+    """
+    UPDATED: Ensures an empty dictionary is returned if no ignored proevents are found.
+    """
     with get_sqlite_connection() as conn:
         cursor = conn.execute("SELECT proevent_id, ignore_on_arm, ignore_on_disarm FROM ignored_proevents")
-        return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in cursor.fetchall()}
+        rows = cursor.fetchall()
+        # Explicitly check for rows before creating the dictionary
+        return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in rows} if rows else {}
 
 def set_proevent_ignore_status(proevent_id: int, building_frk: int, device_prk: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
     """Set the ignore status for a specific proevent."""
