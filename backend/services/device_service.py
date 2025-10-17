@@ -1,4 +1,5 @@
 # backend/services/device_service.py
+
 from typing import List, Dict, Any
 from config import fetch_all, fetch_one
 from sqlite_config import get_all_building_times
@@ -52,15 +53,18 @@ def get_distinct_buildings() -> List[Dict[str, Any]]:
     return buildings
 
 def get_building_panel_state(building_id: int) -> str:
+    """
+    Gets the state of the panel for a given building.
+    """
     sql = """
-        SELECT dvcCurrentState_TXT 
-        FROM Device_TBL 
+        SELECT dvcCurrentState_TXT
+        FROM Device_TBL
         WHERE dvcBuilding_FRK = :building_id AND dvcName_TXT LIKE '%Panel%'
     """
     row = fetch_one(sql, {"building_id": building_id})
     if not row or not row.get("dvccurrentstate_txt"):
         return "Unknown"
-    
+
     state_text = row["dvccurrentstate_txt"]
     if 'AreaArmingStates.4' in state_text:
         return "Armed"
@@ -68,3 +72,14 @@ def get_building_panel_state(building_id: int) -> str:
         return "Disarmed"
     else:
         return "Unknown"
+
+def get_all_building_panel_states() -> Dict[int, str]:
+    """
+    Gets the panel state for all buildings.
+    """
+    buildings = get_distinct_buildings()
+    building_states = {}
+    for building in buildings:
+        state = get_building_panel_state(building["id"])
+        building_states[building["id"]] = state
+    return building_states

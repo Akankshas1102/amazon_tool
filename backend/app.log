@@ -6391,3 +6391,531 @@
 2025-10-16 13:59:40,658 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
 2025-10-16 13:59:40,659 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
 2025-10-16 13:59:40,670 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
+2025-10-16 14:06:44,638 - __main__ - INFO - Starting Uvicorn server.
+2025-10-16 14:06:44,728 - __main__ - INFO - Application startup event triggered.
+2025-10-16 14:06:44,729 - services.scheduler_service - INFO - Scheduler started.
+2025-10-16 14:07:44,822 - services.scheduler_service - INFO - Scheduler running: Managing scheduled states...
+2025-10-16 14:07:44,823 - services.proevent_service - INFO - Scheduler: Checking and managing scheduled proevent states...
+2025-10-16 14:07:44,851 - services.proevent_service - DEBUG - Building 1 is OUTSIDE schedule. Setting to reactive.
+2025-10-16 14:07:45,094 - services.proevent_service - INFO - Set ProEvents to reactive=1 for building 1. Affected rows: 2
+2025-10-16 14:07:45,115 - sqlite_config - INFO - Logged state 'Bulk Arm' for ProEvent 0
+2025-10-16 14:07:45,118 - services.proevent_service - DEBUG - Building 95 is IN schedule. Setting to non-reactive.
+2025-10-16 14:07:45,300 - services.proevent_service - INFO - Set ProEvents to reactive=0 for building 95. Affected rows: 48
+2025-10-16 14:07:45,314 - sqlite_config - INFO - Logged state 'Bulk Disarm' for ProEvent 0
+2025-10-16 14:07:45,315 - services.proevent_service - INFO - Building 95 disarmed. Sending notifications...
+2025-10-16 14:07:45,417 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11106
+2025-10-16 14:07:45,427 - services.proserver_service - INFO - Sent notification to ProServer for device 11106
+2025-10-16 14:07:45,428 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11109
+2025-10-16 14:07:45,508 - services.proserver_service - INFO - Sent notification to ProServer for device 11109
+2025-10-16 14:07:45,509 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11101
+2025-10-16 14:07:45,528 - services.proserver_service - INFO - Sent notification to ProServer for device 11101
+2025-10-16 14:07:45,529 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11102
+2025-10-16 14:07:45,625 - services.proserver_service - INFO - Sent notification to ProServer for device 11102
+2025-10-16 14:07:45,626 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11104
+2025-10-16 14:07:45,726 - services.proserver_service - INFO - Sent notification to ProServer for device 11104
+2025-10-16 14:07:45,727 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11103
+2025-10-16 14:07:45,807 - services.proserver_service - INFO - Sent notification to ProServer for device 11103
+2025-10-16 14:07:45,808 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11105
+2025-10-16 14:07:45,911 - services.proserver_service - INFO - Sent notification to ProServer for device 11105
+2025-10-16 14:07:45,912 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11162
+2025-10-16 14:07:45,916 - services.proserver_service - INFO - Sent notification to ProServer for device 11162
+2025-10-16 14:07:45,917 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11164
+2025-10-16 14:07:45,927 - services.proserver_service - INFO - Sent notification to ProServer for device 11164
+2025-10-16 14:07:45,928 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11165
+2025-10-16 14:07:45,943 - services.proserver_service - INFO - Sent notification to ProServer for device 11165
+2025-10-16 14:07:45,944 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11161
+2025-10-16 14:07:46,027 - services.proserver_service - INFO - Sent notification to ProServer for device 11161
+2025-10-16 14:07:46,027 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11163
+2025-10-16 14:07:46,222 - services.proserver_service - INFO - Sent notification to ProServer for device 11163
+2025-10-16 14:07:46,223 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11166
+2025-10-16 14:07:46,233 - services.proserver_service - INFO - Sent notification to ProServer for device 11166
+2025-10-16 14:07:46,234 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13829
+2025-10-16 14:07:46,327 - services.proserver_service - INFO - Sent notification to ProServer for device 13829
+2025-10-16 14:07:46,327 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13830
+2025-10-16 14:07:46,339 - services.proserver_service - INFO - Sent notification to ProServer for device 13830
+2025-10-16 14:07:46,340 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13831
+2025-10-16 14:07:46,351 - services.proserver_service - INFO - Sent notification to ProServer for device 13831
+2025-10-16 14:07:46,352 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13832
+2025-10-16 14:07:46,424 - services.proserver_service - INFO - Sent notification to ProServer for device 13832
+2025-10-16 14:07:46,425 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13833
+2025-10-16 14:07:46,431 - services.proserver_service - INFO - Sent notification to ProServer for device 13833
+2025-10-16 14:07:46,432 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13834
+2025-10-16 14:07:46,443 - services.proserver_service - INFO - Sent notification to ProServer for device 13834
+2025-10-16 14:07:46,443 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13835
+2025-10-16 14:07:46,539 - services.proserver_service - INFO - Sent notification to ProServer for device 13835
+2025-10-16 14:07:46,540 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13836
+2025-10-16 14:07:46,550 - services.proserver_service - INFO - Sent notification to ProServer for device 13836
+2025-10-16 14:07:46,551 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13837
+2025-10-16 14:07:46,560 - services.proserver_service - INFO - Sent notification to ProServer for device 13837
+2025-10-16 14:07:46,561 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13838
+2025-10-16 14:07:46,631 - services.proserver_service - INFO - Sent notification to ProServer for device 13838
+2025-10-16 14:07:46,632 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13839
+2025-10-16 14:07:46,643 - services.proserver_service - INFO - Sent notification to ProServer for device 13839
+2025-10-16 14:07:46,644 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13840
+2025-10-16 14:07:46,659 - services.proserver_service - INFO - Sent notification to ProServer for device 13840
+2025-10-16 14:07:46,661 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13841
+2025-10-16 14:07:46,741 - services.proserver_service - INFO - Sent notification to ProServer for device 13841
+2025-10-16 14:07:46,742 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13842
+2025-10-16 14:07:46,747 - services.proserver_service - INFO - Sent notification to ProServer for device 13842
+2025-10-16 14:07:46,748 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13843
+2025-10-16 14:07:46,753 - services.proserver_service - INFO - Sent notification to ProServer for device 13843
+2025-10-16 14:07:46,755 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13844
+2025-10-16 14:07:46,839 - services.proserver_service - INFO - Sent notification to ProServer for device 13844
+2025-10-16 14:07:46,840 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13845
+2025-10-16 14:07:46,847 - services.proserver_service - INFO - Sent notification to ProServer for device 13845
+2025-10-16 14:07:46,848 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13846
+2025-10-16 14:07:46,858 - services.proserver_service - INFO - Sent notification to ProServer for device 13846
+2025-10-16 14:07:46,859 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11158
+2025-10-16 14:07:46,937 - services.proserver_service - INFO - Sent notification to ProServer for device 11158
+2025-10-16 14:07:46,939 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11160
+2025-10-16 14:07:46,944 - services.proserver_service - INFO - Sent notification to ProServer for device 11160
+2025-10-16 14:07:46,945 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11159
+2025-10-16 14:07:46,952 - services.proserver_service - INFO - Sent notification to ProServer for device 11159
+2025-10-16 14:07:46,953 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11107
+2025-10-16 14:07:46,958 - services.proserver_service - INFO - Sent notification to ProServer for device 11107
+2025-10-16 14:07:46,959 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11108
+2025-10-16 14:07:46,965 - services.proserver_service - INFO - Sent notification to ProServer for device 11108
+2025-10-16 14:07:46,966 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12407
+2025-10-16 14:07:47,041 - services.proserver_service - INFO - Sent notification to ProServer for device 12407
+2025-10-16 14:07:47,042 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12406
+2025-10-16 14:07:47,048 - services.proserver_service - INFO - Sent notification to ProServer for device 12406
+2025-10-16 14:07:47,049 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13847
+2025-10-16 14:07:47,055 - services.proserver_service - INFO - Sent notification to ProServer for device 13847
+2025-10-16 14:07:47,056 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13848
+2025-10-16 14:07:47,143 - services.proserver_service - INFO - Sent notification to ProServer for device 13848
+2025-10-16 14:07:47,143 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13849
+2025-10-16 14:07:47,156 - services.proserver_service - INFO - Sent notification to ProServer for device 13849
+2025-10-16 14:07:47,158 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13850
+2025-10-16 14:07:47,246 - services.proserver_service - INFO - Sent notification to ProServer for device 13850
+2025-10-16 14:07:47,247 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13851
+2025-10-16 14:07:47,270 - services.proserver_service - INFO - Sent notification to ProServer for device 13851
+2025-10-16 14:07:47,271 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13852
+2025-10-16 14:07:47,355 - services.proserver_service - INFO - Sent notification to ProServer for device 13852
+2025-10-16 14:07:47,356 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13853
+2025-10-16 14:07:47,448 - services.proserver_service - INFO - Sent notification to ProServer for device 13853
+2025-10-16 14:07:47,449 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13854
+2025-10-16 14:07:47,472 - services.proserver_service - INFO - Sent notification to ProServer for device 13854
+2025-10-16 14:07:47,473 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13855
+2025-10-16 14:07:47,551 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
+2025-10-16 14:07:47,552 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
+2025-10-16 14:07:47,560 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
+2025-10-16 14:08:47,596 - services.scheduler_service - INFO - Scheduler running: Managing scheduled states...
+2025-10-16 14:08:47,596 - services.proevent_service - INFO - Scheduler: Checking and managing scheduled proevent states...
+2025-10-16 14:08:47,599 - services.proevent_service - DEBUG - Building 1 is OUTSIDE schedule. Setting to reactive.
+2025-10-16 14:08:47,695 - services.proevent_service - INFO - Set ProEvents to reactive=1 for building 1. Affected rows: 2
+2025-10-16 14:08:47,709 - sqlite_config - INFO - Logged state 'Bulk Arm' for ProEvent 0
+2025-10-16 14:08:47,710 - services.proevent_service - DEBUG - Building 95 is IN schedule. Setting to non-reactive.
+2025-10-16 14:08:47,795 - services.proevent_service - INFO - Set ProEvents to reactive=0 for building 95. Affected rows: 48
+2025-10-16 14:08:47,808 - sqlite_config - INFO - Logged state 'Bulk Disarm' for ProEvent 0
+2025-10-16 14:08:47,809 - services.proevent_service - INFO - Building 95 disarmed. Sending notifications...
+2025-10-16 14:08:47,898 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11106
+2025-10-16 14:08:47,903 - services.proserver_service - INFO - Sent notification to ProServer for device 11106
+2025-10-16 14:08:47,904 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11109
+2025-10-16 14:08:47,979 - services.proserver_service - INFO - Sent notification to ProServer for device 11109
+2025-10-16 14:08:47,980 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11101
+2025-10-16 14:08:47,987 - services.proserver_service - INFO - Sent notification to ProServer for device 11101
+2025-10-16 14:08:47,988 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11102
+2025-10-16 14:08:47,994 - services.proserver_service - INFO - Sent notification to ProServer for device 11102
+2025-10-16 14:08:47,995 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11104
+2025-10-16 14:08:48,001 - services.proserver_service - INFO - Sent notification to ProServer for device 11104
+2025-10-16 14:08:48,002 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11103
+2025-10-16 14:08:48,081 - services.proserver_service - INFO - Sent notification to ProServer for device 11103
+2025-10-16 14:08:48,082 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11105
+2025-10-16 14:08:48,091 - services.proserver_service - INFO - Sent notification to ProServer for device 11105
+2025-10-16 14:08:48,092 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11162
+2025-10-16 14:08:48,101 - services.proserver_service - INFO - Sent notification to ProServer for device 11162
+2025-10-16 14:08:48,102 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11164
+2025-10-16 14:08:48,109 - services.proserver_service - INFO - Sent notification to ProServer for device 11164
+2025-10-16 14:08:48,110 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11165
+2025-10-16 14:08:48,193 - services.proserver_service - INFO - Sent notification to ProServer for device 11165
+2025-10-16 14:08:48,194 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11161
+2025-10-16 14:08:48,286 - services.proserver_service - INFO - Sent notification to ProServer for device 11161
+2025-10-16 14:08:48,287 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11163
+2025-10-16 14:08:48,303 - services.proserver_service - INFO - Sent notification to ProServer for device 11163
+2025-10-16 14:08:48,305 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11166
+2025-10-16 14:08:48,313 - services.proserver_service - INFO - Sent notification to ProServer for device 11166
+2025-10-16 14:08:48,314 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13829
+2025-10-16 14:08:48,387 - services.proserver_service - INFO - Sent notification to ProServer for device 13829
+2025-10-16 14:08:48,388 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13830
+2025-10-16 14:08:48,394 - services.proserver_service - INFO - Sent notification to ProServer for device 13830
+2025-10-16 14:08:48,395 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13831
+2025-10-16 14:08:48,401 - services.proserver_service - INFO - Sent notification to ProServer for device 13831
+2025-10-16 14:08:48,402 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13832
+2025-10-16 14:08:48,406 - services.proserver_service - INFO - Sent notification to ProServer for device 13832
+2025-10-16 14:08:48,407 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13833
+2025-10-16 14:08:48,416 - services.proserver_service - INFO - Sent notification to ProServer for device 13833
+2025-10-16 14:08:48,417 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13834
+2025-10-16 14:08:48,494 - services.proserver_service - INFO - Sent notification to ProServer for device 13834
+2025-10-16 14:08:48,495 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13835
+2025-10-16 14:08:48,499 - services.proserver_service - INFO - Sent notification to ProServer for device 13835
+2025-10-16 14:08:48,500 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13836
+2025-10-16 14:08:48,505 - services.proserver_service - INFO - Sent notification to ProServer for device 13836
+2025-10-16 14:08:48,505 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13837
+2025-10-16 14:08:48,510 - services.proserver_service - INFO - Sent notification to ProServer for device 13837
+2025-10-16 14:08:48,511 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13838
+2025-10-16 14:08:48,516 - services.proserver_service - INFO - Sent notification to ProServer for device 13838
+2025-10-16 14:08:48,517 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13839
+2025-10-16 14:08:48,601 - services.proserver_service - INFO - Sent notification to ProServer for device 13839
+2025-10-16 14:08:48,603 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13840
+2025-10-16 14:08:48,609 - services.proserver_service - INFO - Sent notification to ProServer for device 13840
+2025-10-16 14:08:48,610 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13841
+2025-10-16 14:08:48,619 - services.proserver_service - INFO - Sent notification to ProServer for device 13841
+2025-10-16 14:08:48,620 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13842
+2025-10-16 14:08:48,626 - services.proserver_service - INFO - Sent notification to ProServer for device 13842
+2025-10-16 14:08:48,627 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13843
+2025-10-16 14:08:48,712 - services.proserver_service - INFO - Sent notification to ProServer for device 13843
+2025-10-16 14:08:48,713 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13844
+2025-10-16 14:08:48,805 - services.proserver_service - INFO - Sent notification to ProServer for device 13844
+2025-10-16 14:08:48,806 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13845
+2025-10-16 14:08:48,825 - services.proserver_service - INFO - Sent notification to ProServer for device 13845
+2025-10-16 14:08:48,826 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13846
+2025-10-16 14:08:48,896 - services.proserver_service - INFO - Sent notification to ProServer for device 13846
+2025-10-16 14:08:48,897 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11158
+2025-10-16 14:08:48,910 - services.proserver_service - INFO - Sent notification to ProServer for device 11158
+2025-10-16 14:08:48,911 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11160
+2025-10-16 14:08:48,919 - services.proserver_service - INFO - Sent notification to ProServer for device 11160
+2025-10-16 14:08:48,920 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11159
+2025-10-16 14:08:48,929 - services.proserver_service - INFO - Sent notification to ProServer for device 11159
+2025-10-16 14:08:48,930 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11107
+2025-10-16 14:08:49,004 - services.proserver_service - INFO - Sent notification to ProServer for device 11107
+2025-10-16 14:08:49,005 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11108
+2025-10-16 14:08:49,012 - services.proserver_service - INFO - Sent notification to ProServer for device 11108
+2025-10-16 14:08:49,012 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12407
+2025-10-16 14:08:49,018 - services.proserver_service - INFO - Sent notification to ProServer for device 12407
+2025-10-16 14:08:49,019 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12406
+2025-10-16 14:08:49,024 - services.proserver_service - INFO - Sent notification to ProServer for device 12406
+2025-10-16 14:08:49,025 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13847
+2025-10-16 14:08:49,031 - services.proserver_service - INFO - Sent notification to ProServer for device 13847
+2025-10-16 14:08:49,032 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13848
+2025-10-16 14:08:49,119 - services.proserver_service - INFO - Sent notification to ProServer for device 13848
+2025-10-16 14:08:49,120 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13849
+2025-10-16 14:08:49,124 - services.proserver_service - INFO - Sent notification to ProServer for device 13849
+2025-10-16 14:08:49,125 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13850
+2025-10-16 14:08:49,134 - services.proserver_service - INFO - Sent notification to ProServer for device 13850
+2025-10-16 14:08:49,135 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13851
+2025-10-16 14:08:49,232 - services.proserver_service - INFO - Sent notification to ProServer for device 13851
+2025-10-16 14:08:49,233 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13852
+2025-10-16 14:08:49,307 - services.proserver_service - INFO - Sent notification to ProServer for device 13852
+2025-10-16 14:08:49,307 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13853
+2025-10-16 14:08:49,317 - services.proserver_service - INFO - Sent notification to ProServer for device 13853
+2025-10-16 14:08:49,318 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13854
+2025-10-16 14:08:49,326 - services.proserver_service - INFO - Sent notification to ProServer for device 13854
+2025-10-16 14:08:49,327 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13855
+2025-10-16 14:08:49,335 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
+2025-10-16 14:08:49,336 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
+2025-10-16 14:08:49,343 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
+2025-10-16 14:09:49,381 - services.scheduler_service - INFO - Scheduler running: Managing scheduled states...
+2025-10-16 14:09:49,381 - services.proevent_service - INFO - Scheduler: Checking and managing scheduled proevent states...
+2025-10-16 14:09:49,385 - services.proevent_service - DEBUG - Building 1 is OUTSIDE schedule. Setting to reactive.
+2025-10-16 14:09:49,510 - services.proevent_service - INFO - Set ProEvents to reactive=1 for building 1. Affected rows: 2
+2025-10-16 14:09:49,523 - sqlite_config - INFO - Logged state 'Bulk Arm' for ProEvent 0
+2025-10-16 14:09:49,527 - services.proevent_service - DEBUG - Building 95 is IN schedule. Setting to non-reactive.
+2025-10-16 14:09:49,635 - services.proevent_service - INFO - Set ProEvents to reactive=0 for building 95. Affected rows: 48
+2025-10-16 14:09:49,653 - sqlite_config - INFO - Logged state 'Bulk Disarm' for ProEvent 0
+2025-10-16 14:09:49,654 - services.proevent_service - INFO - Building 95 disarmed. Sending notifications...
+2025-10-16 14:09:49,736 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11106
+2025-10-16 14:09:49,815 - services.proserver_service - INFO - Sent notification to ProServer for device 11106
+2025-10-16 14:09:49,816 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11109
+2025-10-16 14:09:49,828 - services.proserver_service - INFO - Sent notification to ProServer for device 11109
+2025-10-16 14:09:49,829 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11101
+2025-10-16 14:09:49,840 - services.proserver_service - INFO - Sent notification to ProServer for device 11101
+2025-10-16 14:09:49,841 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11102
+2025-10-16 14:09:49,927 - services.proserver_service - INFO - Sent notification to ProServer for device 11102
+2025-10-16 14:09:49,928 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11104
+2025-10-16 14:09:49,937 - services.proserver_service - INFO - Sent notification to ProServer for device 11104
+2025-10-16 14:09:49,939 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11103
+2025-10-16 14:09:50,021 - services.proserver_service - INFO - Sent notification to ProServer for device 11103
+2025-10-16 14:09:50,022 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11105
+2025-10-16 14:09:50,028 - services.proserver_service - INFO - Sent notification to ProServer for device 11105
+2025-10-16 14:09:50,029 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11162
+2025-10-16 14:09:50,035 - services.proserver_service - INFO - Sent notification to ProServer for device 11162
+2025-10-16 14:09:50,036 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11164
+2025-10-16 14:09:50,043 - services.proserver_service - INFO - Sent notification to ProServer for device 11164
+2025-10-16 14:09:50,043 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11165
+2025-10-16 14:09:50,121 - services.proserver_service - INFO - Sent notification to ProServer for device 11165
+2025-10-16 14:09:50,122 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11161
+2025-10-16 14:09:50,127 - services.proserver_service - INFO - Sent notification to ProServer for device 11161
+2025-10-16 14:09:50,128 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11163
+2025-10-16 14:09:50,133 - services.proserver_service - INFO - Sent notification to ProServer for device 11163
+2025-10-16 14:09:50,134 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11166
+2025-10-16 14:09:50,143 - services.proserver_service - INFO - Sent notification to ProServer for device 11166
+2025-10-16 14:09:50,144 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13829
+2025-10-16 14:09:50,224 - services.proserver_service - INFO - Sent notification to ProServer for device 13829
+2025-10-16 14:09:50,225 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13830
+2025-10-16 14:09:50,233 - services.proserver_service - INFO - Sent notification to ProServer for device 13830
+2025-10-16 14:09:50,234 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13831
+2025-10-16 14:09:50,239 - services.proserver_service - INFO - Sent notification to ProServer for device 13831
+2025-10-16 14:09:50,240 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13832
+2025-10-16 14:09:50,247 - services.proserver_service - INFO - Sent notification to ProServer for device 13832
+2025-10-16 14:09:50,248 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13833
+2025-10-16 14:09:50,334 - services.proserver_service - INFO - Sent notification to ProServer for device 13833
+2025-10-16 14:09:50,334 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13834
+2025-10-16 14:09:50,429 - services.proserver_service - INFO - Sent notification to ProServer for device 13834
+2025-10-16 14:09:50,430 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13835
+2025-10-16 14:09:50,439 - services.proserver_service - INFO - Sent notification to ProServer for device 13835
+2025-10-16 14:09:50,439 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13836
+2025-10-16 14:09:50,446 - services.proserver_service - INFO - Sent notification to ProServer for device 13836
+2025-10-16 14:09:50,447 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13837
+2025-10-16 14:09:50,453 - services.proserver_service - INFO - Sent notification to ProServer for device 13837
+2025-10-16 14:09:50,453 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13838
+2025-10-16 14:09:50,458 - services.proserver_service - INFO - Sent notification to ProServer for device 13838
+2025-10-16 14:09:50,459 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13839
+2025-10-16 14:09:50,547 - services.proserver_service - INFO - Sent notification to ProServer for device 13839
+2025-10-16 14:09:50,548 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13840
+2025-10-16 14:09:50,557 - services.proserver_service - INFO - Sent notification to ProServer for device 13840
+2025-10-16 14:09:50,558 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13841
+2025-10-16 14:09:50,644 - services.proserver_service - INFO - Sent notification to ProServer for device 13841
+2025-10-16 14:09:50,645 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13842
+2025-10-16 14:09:50,657 - services.proserver_service - INFO - Sent notification to ProServer for device 13842
+2025-10-16 14:09:50,658 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13843
+2025-10-16 14:09:50,740 - services.proserver_service - INFO - Sent notification to ProServer for device 13843
+2025-10-16 14:09:50,741 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13844
+2025-10-16 14:09:50,755 - services.proserver_service - INFO - Sent notification to ProServer for device 13844
+2025-10-16 14:09:50,756 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13845
+2025-10-16 14:09:50,764 - services.proserver_service - INFO - Sent notification to ProServer for device 13845
+2025-10-16 14:09:50,764 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13846
+2025-10-16 14:09:50,845 - services.proserver_service - INFO - Sent notification to ProServer for device 13846
+2025-10-16 14:09:50,846 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11158
+2025-10-16 14:09:50,857 - services.proserver_service - INFO - Sent notification to ProServer for device 11158
+2025-10-16 14:09:50,858 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11160
+2025-10-16 14:09:50,943 - services.proserver_service - INFO - Sent notification to ProServer for device 11160
+2025-10-16 14:09:50,944 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11159
+2025-10-16 14:09:51,046 - services.proserver_service - INFO - Sent notification to ProServer for device 11159
+2025-10-16 14:09:51,047 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11107
+2025-10-16 14:09:51,061 - services.proserver_service - INFO - Sent notification to ProServer for device 11107
+2025-10-16 14:09:51,062 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11108
+2025-10-16 14:09:51,142 - services.proserver_service - INFO - Sent notification to ProServer for device 11108
+2025-10-16 14:09:51,143 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12407
+2025-10-16 14:09:51,147 - services.proserver_service - INFO - Sent notification to ProServer for device 12407
+2025-10-16 14:09:51,148 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12406
+2025-10-16 14:09:51,153 - services.proserver_service - INFO - Sent notification to ProServer for device 12406
+2025-10-16 14:09:51,154 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13847
+2025-10-16 14:09:51,160 - services.proserver_service - INFO - Sent notification to ProServer for device 13847
+2025-10-16 14:09:51,161 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13848
+2025-10-16 14:09:51,166 - services.proserver_service - INFO - Sent notification to ProServer for device 13848
+2025-10-16 14:09:51,167 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13849
+2025-10-16 14:09:51,253 - services.proserver_service - INFO - Sent notification to ProServer for device 13849
+2025-10-16 14:09:51,254 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13850
+2025-10-16 14:09:51,262 - services.proserver_service - INFO - Sent notification to ProServer for device 13850
+2025-10-16 14:09:51,263 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13851
+2025-10-16 14:09:51,346 - services.proserver_service - INFO - Sent notification to ProServer for device 13851
+2025-10-16 14:09:51,347 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13852
+2025-10-16 14:09:51,357 - services.proserver_service - INFO - Sent notification to ProServer for device 13852
+2025-10-16 14:09:51,358 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13853
+2025-10-16 14:09:51,367 - services.proserver_service - INFO - Sent notification to ProServer for device 13853
+2025-10-16 14:09:51,368 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13854
+2025-10-16 14:09:51,374 - services.proserver_service - INFO - Sent notification to ProServer for device 13854
+2025-10-16 14:09:51,375 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13855
+2025-10-16 14:09:51,450 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
+2025-10-16 14:09:51,451 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
+2025-10-16 14:09:51,454 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
+2025-10-16 14:10:51,508 - services.scheduler_service - INFO - Scheduler running: Managing scheduled states...
+2025-10-16 14:10:51,509 - services.proevent_service - INFO - Scheduler: Checking and managing scheduled proevent states...
+2025-10-16 14:10:51,526 - services.proevent_service - DEBUG - Building 1 is OUTSIDE schedule. Setting to reactive.
+2025-10-16 14:10:51,586 - services.proevent_service - INFO - Set ProEvents to reactive=1 for building 1. Affected rows: 2
+2025-10-16 14:10:51,606 - sqlite_config - INFO - Logged state 'Bulk Arm' for ProEvent 0
+2025-10-16 14:10:51,607 - services.proevent_service - DEBUG - Building 95 is IN schedule. Setting to non-reactive.
+2025-10-16 14:10:51,772 - services.proevent_service - INFO - Set ProEvents to reactive=0 for building 95. Affected rows: 48
+2025-10-16 14:10:51,785 - sqlite_config - INFO - Logged state 'Bulk Disarm' for ProEvent 0
+2025-10-16 14:10:51,786 - services.proevent_service - INFO - Building 95 disarmed. Sending notifications...
+2025-10-16 14:10:51,876 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11106
+2025-10-16 14:10:51,887 - services.proserver_service - INFO - Sent notification to ProServer for device 11106
+2025-10-16 14:10:51,888 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11109
+2025-10-16 14:10:51,968 - services.proserver_service - INFO - Sent notification to ProServer for device 11109
+2025-10-16 14:10:51,970 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11101
+2025-10-16 14:10:51,992 - services.proserver_service - INFO - Sent notification to ProServer for device 11101
+2025-10-16 14:10:51,994 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11102
+2025-10-16 14:10:52,070 - services.proserver_service - INFO - Sent notification to ProServer for device 11102
+2025-10-16 14:10:52,071 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11104
+2025-10-16 14:10:52,077 - services.proserver_service - INFO - Sent notification to ProServer for device 11104
+2025-10-16 14:10:52,077 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11103
+2025-10-16 14:10:52,085 - services.proserver_service - INFO - Sent notification to ProServer for device 11103
+2025-10-16 14:10:52,086 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11105
+2025-10-16 14:10:52,094 - services.proserver_service - INFO - Sent notification to ProServer for device 11105
+2025-10-16 14:10:52,095 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11162
+2025-10-16 14:10:52,171 - services.proserver_service - INFO - Sent notification to ProServer for device 11162
+2025-10-16 14:10:52,172 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11164
+2025-10-16 14:10:52,179 - services.proserver_service - INFO - Sent notification to ProServer for device 11164
+2025-10-16 14:10:52,180 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11165
+2025-10-16 14:10:52,188 - services.proserver_service - INFO - Sent notification to ProServer for device 11165
+2025-10-16 14:10:52,188 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11161
+2025-10-16 14:10:52,277 - services.proserver_service - INFO - Sent notification to ProServer for device 11161
+2025-10-16 14:10:52,278 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11163
+2025-10-16 14:10:52,298 - services.proserver_service - INFO - Sent notification to ProServer for device 11163
+2025-10-16 14:10:52,299 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11166
+2025-10-16 14:10:52,306 - services.proserver_service - INFO - Sent notification to ProServer for device 11166
+2025-10-16 14:10:52,307 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13829
+2025-10-16 14:10:52,385 - services.proserver_service - INFO - Sent notification to ProServer for device 13829
+2025-10-16 14:10:52,386 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13830
+2025-10-16 14:10:52,391 - services.proserver_service - INFO - Sent notification to ProServer for device 13830
+2025-10-16 14:10:52,392 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13831
+2025-10-16 14:10:52,395 - services.proserver_service - INFO - Sent notification to ProServer for device 13831
+2025-10-16 14:10:52,396 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13832
+2025-10-16 14:10:52,403 - services.proserver_service - INFO - Sent notification to ProServer for device 13832
+2025-10-16 14:10:52,403 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13833
+2025-10-16 14:10:52,480 - services.proserver_service - INFO - Sent notification to ProServer for device 13833
+2025-10-16 14:10:52,481 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13834
+2025-10-16 14:10:52,505 - services.proserver_service - INFO - Sent notification to ProServer for device 13834
+2025-10-16 14:10:52,506 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13835
+2025-10-16 14:10:52,582 - services.proserver_service - INFO - Sent notification to ProServer for device 13835
+2025-10-16 14:10:52,582 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13836
+2025-10-16 14:10:52,591 - services.proserver_service - INFO - Sent notification to ProServer for device 13836
+2025-10-16 14:10:52,592 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13837
+2025-10-16 14:10:52,599 - services.proserver_service - INFO - Sent notification to ProServer for device 13837
+2025-10-16 14:10:52,600 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13838
+2025-10-16 14:10:52,604 - services.proserver_service - INFO - Sent notification to ProServer for device 13838
+2025-10-16 14:10:52,605 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13839
+2025-10-16 14:10:52,614 - services.proserver_service - INFO - Sent notification to ProServer for device 13839
+2025-10-16 14:10:52,615 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13840
+2025-10-16 14:10:52,692 - services.proserver_service - INFO - Sent notification to ProServer for device 13840
+2025-10-16 14:10:52,693 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13841
+2025-10-16 14:10:52,704 - services.proserver_service - INFO - Sent notification to ProServer for device 13841
+2025-10-16 14:10:52,705 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13842
+2025-10-16 14:10:52,787 - services.proserver_service - INFO - Sent notification to ProServer for device 13842
+2025-10-16 14:10:52,788 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13843
+2025-10-16 14:10:52,804 - services.proserver_service - INFO - Sent notification to ProServer for device 13843
+2025-10-16 14:10:52,805 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13844
+2025-10-16 14:10:52,817 - services.proserver_service - INFO - Sent notification to ProServer for device 13844
+2025-10-16 14:10:52,817 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13845
+2025-10-16 14:10:52,897 - services.proserver_service - INFO - Sent notification to ProServer for device 13845
+2025-10-16 14:10:52,898 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13846
+2025-10-16 14:10:52,904 - services.proserver_service - INFO - Sent notification to ProServer for device 13846
+2025-10-16 14:10:52,904 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11158
+2025-10-16 14:10:52,913 - services.proserver_service - INFO - Sent notification to ProServer for device 11158
+2025-10-16 14:10:52,913 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11160
+2025-10-16 14:10:52,922 - services.proserver_service - INFO - Sent notification to ProServer for device 11160
+2025-10-16 14:10:52,923 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11159
+2025-10-16 14:10:53,003 - services.proserver_service - INFO - Sent notification to ProServer for device 11159
+2025-10-16 14:10:53,004 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11107
+2025-10-16 14:10:53,011 - services.proserver_service - INFO - Sent notification to ProServer for device 11107
+2025-10-16 14:10:53,013 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11108
+2025-10-16 14:10:53,020 - services.proserver_service - INFO - Sent notification to ProServer for device 11108
+2025-10-16 14:10:53,022 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12407
+2025-10-16 14:10:53,103 - services.proserver_service - INFO - Sent notification to ProServer for device 12407
+2025-10-16 14:10:53,104 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12406
+2025-10-16 14:10:53,196 - services.proserver_service - INFO - Sent notification to ProServer for device 12406
+2025-10-16 14:10:53,197 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13847
+2025-10-16 14:10:53,206 - services.proserver_service - INFO - Sent notification to ProServer for device 13847
+2025-10-16 14:10:53,207 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13848
+2025-10-16 14:10:53,217 - services.proserver_service - INFO - Sent notification to ProServer for device 13848
+2025-10-16 14:10:53,218 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13849
+2025-10-16 14:10:53,228 - services.proserver_service - INFO - Sent notification to ProServer for device 13849
+2025-10-16 14:10:53,229 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13850
+2025-10-16 14:10:53,307 - services.proserver_service - INFO - Sent notification to ProServer for device 13850
+2025-10-16 14:10:53,308 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13851
+2025-10-16 14:10:53,318 - services.proserver_service - INFO - Sent notification to ProServer for device 13851
+2025-10-16 14:10:53,319 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13852
+2025-10-16 14:10:53,327 - services.proserver_service - INFO - Sent notification to ProServer for device 13852
+2025-10-16 14:10:53,328 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13853
+2025-10-16 14:10:53,407 - services.proserver_service - INFO - Sent notification to ProServer for device 13853
+2025-10-16 14:10:53,409 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13854
+2025-10-16 14:10:53,433 - services.proserver_service - INFO - Sent notification to ProServer for device 13854
+2025-10-16 14:10:53,435 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13855
+2025-10-16 14:10:53,513 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
+2025-10-16 14:10:53,514 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
+2025-10-16 14:10:53,527 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
+2025-10-16 14:11:53,578 - services.scheduler_service - INFO - Scheduler running: Managing scheduled states...
+2025-10-16 14:11:53,579 - services.proevent_service - INFO - Scheduler: Checking and managing scheduled proevent states...
+2025-10-16 14:11:53,585 - services.proevent_service - DEBUG - Building 1 is OUTSIDE schedule. Setting to reactive.
+2025-10-16 14:11:53,729 - services.proevent_service - INFO - Set ProEvents to reactive=1 for building 1. Affected rows: 2
+2025-10-16 14:11:53,742 - sqlite_config - INFO - Logged state 'Bulk Arm' for ProEvent 0
+2025-10-16 14:11:53,753 - services.proevent_service - DEBUG - Building 95 is IN schedule. Setting to non-reactive.
+2025-10-16 14:11:53,845 - services.proevent_service - INFO - Set ProEvents to reactive=0 for building 95. Affected rows: 48
+2025-10-16 14:11:53,856 - sqlite_config - INFO - Logged state 'Bulk Disarm' for ProEvent 0
+2025-10-16 14:11:53,857 - services.proevent_service - INFO - Building 95 disarmed. Sending notifications...
+2025-10-16 14:11:53,949 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11106
+2025-10-16 14:11:54,026 - services.proserver_service - INFO - Sent notification to ProServer for device 11106
+2025-10-16 14:11:54,026 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11109
+2025-10-16 14:11:54,034 - services.proserver_service - INFO - Sent notification to ProServer for device 11109
+2025-10-16 14:11:54,034 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11101
+2025-10-16 14:11:54,039 - services.proserver_service - INFO - Sent notification to ProServer for device 11101
+2025-10-16 14:11:54,040 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11102
+2025-10-16 14:11:54,047 - services.proserver_service - INFO - Sent notification to ProServer for device 11102
+2025-10-16 14:11:54,048 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11104
+2025-10-16 14:11:54,122 - services.proserver_service - INFO - Sent notification to ProServer for device 11104
+2025-10-16 14:11:54,123 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11103
+2025-10-16 14:11:54,130 - services.proserver_service - INFO - Sent notification to ProServer for device 11103
+2025-10-16 14:11:54,131 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11105
+2025-10-16 14:11:54,147 - services.proserver_service - INFO - Sent notification to ProServer for device 11105
+2025-10-16 14:11:54,148 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11162
+2025-10-16 14:11:54,227 - services.proserver_service - INFO - Sent notification to ProServer for device 11162
+2025-10-16 14:11:54,228 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11164
+2025-10-16 14:11:54,234 - services.proserver_service - INFO - Sent notification to ProServer for device 11164
+2025-10-16 14:11:54,235 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11165
+2025-10-16 14:11:54,242 - services.proserver_service - INFO - Sent notification to ProServer for device 11165
+2025-10-16 14:11:54,243 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11161
+2025-10-16 14:11:54,250 - services.proserver_service - INFO - Sent notification to ProServer for device 11161
+2025-10-16 14:11:54,250 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11163
+2025-10-16 14:11:54,255 - services.proserver_service - INFO - Sent notification to ProServer for device 11163
+2025-10-16 14:11:54,256 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11166
+2025-10-16 14:11:54,330 - services.proserver_service - INFO - Sent notification to ProServer for device 11166
+2025-10-16 14:11:54,331 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13829
+2025-10-16 14:11:54,336 - services.proserver_service - INFO - Sent notification to ProServer for device 13829
+2025-10-16 14:11:54,336 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13830
+2025-10-16 14:11:54,341 - services.proserver_service - INFO - Sent notification to ProServer for device 13830
+2025-10-16 14:11:54,342 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13831
+2025-10-16 14:11:54,346 - services.proserver_service - INFO - Sent notification to ProServer for device 13831
+2025-10-16 14:11:54,347 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13832
+2025-10-16 14:11:54,353 - services.proserver_service - INFO - Sent notification to ProServer for device 13832
+2025-10-16 14:11:54,354 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13833
+2025-10-16 14:11:54,359 - services.proserver_service - INFO - Sent notification to ProServer for device 13833
+2025-10-16 14:11:54,360 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13834
+2025-10-16 14:11:54,438 - services.proserver_service - INFO - Sent notification to ProServer for device 13834
+2025-10-16 14:11:54,439 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13835
+2025-10-16 14:11:54,446 - services.proserver_service - INFO - Sent notification to ProServer for device 13835
+2025-10-16 14:11:54,446 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13836
+2025-10-16 14:11:54,454 - services.proserver_service - INFO - Sent notification to ProServer for device 13836
+2025-10-16 14:11:54,454 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13837
+2025-10-16 14:11:54,461 - services.proserver_service - INFO - Sent notification to ProServer for device 13837
+2025-10-16 14:11:54,462 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13838
+2025-10-16 14:11:54,534 - services.proserver_service - INFO - Sent notification to ProServer for device 13838
+2025-10-16 14:11:54,535 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13839
+2025-10-16 14:11:54,538 - services.proserver_service - INFO - Sent notification to ProServer for device 13839
+2025-10-16 14:11:54,539 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13840
+2025-10-16 14:11:54,543 - services.proserver_service - INFO - Sent notification to ProServer for device 13840
+2025-10-16 14:11:54,544 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13841
+2025-10-16 14:11:54,548 - services.proserver_service - INFO - Sent notification to ProServer for device 13841
+2025-10-16 14:11:54,548 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13842
+2025-10-16 14:11:54,556 - services.proserver_service - INFO - Sent notification to ProServer for device 13842
+2025-10-16 14:11:54,556 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13843
+2025-10-16 14:11:54,567 - services.proserver_service - INFO - Sent notification to ProServer for device 13843
+2025-10-16 14:11:54,567 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13844
+2025-10-16 14:11:54,637 - services.proserver_service - INFO - Sent notification to ProServer for device 13844
+2025-10-16 14:11:54,638 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13845
+2025-10-16 14:11:54,642 - services.proserver_service - INFO - Sent notification to ProServer for device 13845
+2025-10-16 14:11:54,643 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13846
+2025-10-16 14:11:54,647 - services.proserver_service - INFO - Sent notification to ProServer for device 13846
+2025-10-16 14:11:54,648 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11158
+2025-10-16 14:11:54,652 - services.proserver_service - INFO - Sent notification to ProServer for device 11158
+2025-10-16 14:11:54,653 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11160
+2025-10-16 14:11:54,657 - services.proserver_service - INFO - Sent notification to ProServer for device 11160
+2025-10-16 14:11:54,657 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11159
+2025-10-16 14:11:54,664 - services.proserver_service - INFO - Sent notification to ProServer for device 11159
+2025-10-16 14:11:54,665 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11107
+2025-10-16 14:11:54,738 - services.proserver_service - INFO - Sent notification to ProServer for device 11107
+2025-10-16 14:11:54,739 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 11108
+2025-10-16 14:11:54,743 - services.proserver_service - INFO - Sent notification to ProServer for device 11108
+2025-10-16 14:11:54,743 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12407
+2025-10-16 14:11:54,753 - services.proserver_service - INFO - Sent notification to ProServer for device 12407
+2025-10-16 14:11:54,754 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 12406
+2025-10-16 14:11:54,764 - services.proserver_service - INFO - Sent notification to ProServer for device 12406
+2025-10-16 14:11:54,764 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13847
+2025-10-16 14:11:54,839 - services.proserver_service - INFO - Sent notification to ProServer for device 13847
+2025-10-16 14:11:54,840 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13848
+2025-10-16 14:11:54,846 - services.proserver_service - INFO - Sent notification to ProServer for device 13848
+2025-10-16 14:11:54,847 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13849
+2025-10-16 14:11:54,851 - services.proserver_service - INFO - Sent notification to ProServer for device 13849
+2025-10-16 14:11:54,851 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13850
+2025-10-16 14:11:54,855 - services.proserver_service - INFO - Sent notification to ProServer for device 13850
+2025-10-16 14:11:54,856 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13851
+2025-10-16 14:11:54,860 - services.proserver_service - INFO - Sent notification to ProServer for device 13851
+2025-10-16 14:11:54,860 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13852
+2025-10-16 14:11:54,867 - services.proserver_service - INFO - Sent notification to ProServer for device 13852
+2025-10-16 14:11:54,867 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13853
+2025-10-16 14:11:54,943 - services.proserver_service - INFO - Sent notification to ProServer for device 13853
+2025-10-16 14:11:54,944 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13854
+2025-10-16 14:11:54,947 - services.proserver_service - INFO - Sent notification to ProServer for device 13854
+2025-10-16 14:11:54,947 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13855
+2025-10-16 14:11:54,950 - services.proserver_service - INFO - Sent notification to ProServer for device 13855
+2025-10-16 14:11:54,951 - services.proserver_service - INFO - Attempting to send notification to ProServer for device_id: 13856
+2025-10-16 14:11:54,955 - services.proserver_service - INFO - Sent notification to ProServer for device 13856
