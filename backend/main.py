@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes import router as device_router
 from config import health_check
 from services.scheduler_service import start_scheduler
+from services.cache_service import set_cache_value  # Import cache service
 from logger import get_logger
 
 # Create the logger instance at the top of the file
@@ -14,6 +15,14 @@ app = FastAPI(title="Amazon Device Control API")
 @app.on_event("startup")
 def startup_event():
     logger.info("Application startup event triggered.")
+    
+    # Initialize the global panel status (default to Armed)
+    try:
+        set_cache_value('panel_armed', True)
+        logger.info("Global panel status initialized to 'Armed'.")
+    except Exception as e:
+        logger.error(f"Failed to initialize panel status in cache: {e}")
+        
     start_scheduler()
 
 # This section gives your frontend permission to access the backend

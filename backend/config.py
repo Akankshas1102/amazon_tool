@@ -23,6 +23,11 @@ DB_NAME = os.getenv("DB_NAME", "vtasdata_amazon")
 DB_USER = os.getenv("DB_USER", "sa")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "m00se_1234")
 
+
+# --- ProServer Configuration ---
+PROSERVER_IP = os.getenv("10.192.0.173")
+PROSERVER_PORT = os.getenv("7777") 
+
 # URL-encode the driver string to handle spaces
 encoded_driver = quote_plus(DB_DRIVER)
 

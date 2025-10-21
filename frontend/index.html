@@ -11,6 +11,13 @@
         <header>
             <h1>Amazon Device Control</h1>
             <div class="header-controls">
+                <div class="panel-status-container">
+                    <span id="panel-status-text">Loading...</span>
+                    <label class="switch">
+                        <input type="checkbox" id="panel-status-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
                 <div class="building-selector">
                     <input type="text" class="building-search" placeholder="Search buildings..." />
                     <button class="clear-filter" style="display:none;">&times;</button>

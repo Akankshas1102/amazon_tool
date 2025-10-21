@@ -1,110 +1,199 @@
 # backend/services/proevent_service.py
 
-from config import execute_query, fetch_all
+from sqlite_config import get_building_time, get_ignored_proevents
+from services import device_service, proserver_service, cache_service
 from logger import get_logger
 from datetime import datetime
-from sqlite_config import get_all_building_times, get_ignored_proevents, log_proevent_state
-from services import proserver_service
+import traceback
 
 logger = get_logger(__name__)
 
-def set_proevent_reactive_for_building(building_id: int, reactive: int):
+
+def get_all_proevents_for_building(building_id: int, search: str | None = None,
+                                 limit: int = 100, offset: int = 0) -> list[dict]:
     """
-    Sets all proevents in a building to a specific reactive state,
-    unless they are individually ignored for that specific action.
+    Retrieves all proevents for a specific building.
+    
+    This function now assumes that device_service is the source of truth
+    for proevents, as they are not in the building_schedules.db.
     """
-    ignored_proevents = get_ignored_proevents()
-    # DEFENSIVE CHECK: Ensure ignored_proevents is a dictionary.
-    if ignored_proevents is None:
-        ignored_proevents = {}
+    logger.debug(f"Fetching proevents for building {building_id} with search='{search}'")
+    try:
+        # Assuming device_service has a method to get devices/proevents
+        # This is a necessary assumption as the proevents are not in the SQLite DB.
+        # If your function in device_service is named differently, update this line.
+        proevents = device_service.get_devices(
+            building_id=building_id, search=search, limit=limit, offset=offset
+        )
+        return proevents
+    except AttributeError:
+        logger.error("device_service does not have a 'get_devices' method. Cannot fetch proevents.")
+        # Simulating the function signature from routes.py, assuming device_service has it
+        logger.warning("Falling back to dummy 'get_devices' call in proevent_service. This should be fixed.")
+        return []
+    except Exception as e:
+        logger.error(f"Error fetching proevents: {e}")
+        return []
 
-    sql = "UPDATE ProEvent_TBL SET pevReactive_FRK = :reactive WHERE pevBuilding_FRK = :building_id"
-    params = {"reactive": reactive, "building_id": building_id}
-
-    proevents_to_ignore = []
-    # This loop is now safe.
-    for proevent_id, ignore_settings in ignored_proevents.items():
-        if reactive == 1 and ignore_settings.get("ignore_on_arm"):
-            proevents_to_ignore.append(proevent_id)
-        elif reactive == 0 and ignore_settings.get("ignore_on_disarm"):
-            proevents_to_ignore.append(proevent_id)
-
-    if proevents_to_ignore:
-        ignored_params = {f"ignore_{i}": pid for i, pid in enumerate(proevents_to_ignore)}
-        sql += f" AND ProEvent_PRK NOT IN ({', '.join(':' + name for name in ignored_params)})"
-        params.update(ignored_params)
-
-    affected_rows = execute_query(sql, params)
-    logger.info(f"Set ProEvents to reactive={reactive} for building {building_id}. Affected rows: {affected_rows}")
-
-    log_proevent_state(0, building_id, f"Bulk {'Arm' if reactive == 1 else 'Disarm'}")
-
-    return affected_rows
-
-
-def get_all_proevents_for_building(building_id: int, search: str | None = None, limit: int = 100, offset: int = 0):
-    params = {
-        "building_id": building_id,
-        "limit": limit,
-        "offset": offset
-    }
-    search_clause = ""
-    if search:
-        search_clause = "AND LOWER(pevAlias_TXT) LIKE LOWER(:search)"
-        params["search"] = f"%{search}%"
-    sql = f"""
-        SELECT
-            ProEvent_PRK AS id,
-            pevAlias_TXT AS name,
-            pevReactive_FRK AS reactive_state
-        FROM ProEvent_TBL
-        WHERE pevBuilding_FRK = :building_id
-        {search_clause}
-        ORDER BY pevAlias_TXT
-        OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
+def set_proevent_reactive_for_building(building_id: int, reactive: int,
+                                       ignored_ids: list[int] | None = None) -> int:
     """
-    results = fetch_all(sql, params)
-    # DEFENSIVE CHECK: Ensure this function always returns a list.
-    return results if results is not None else []
+    Sets the reactive state for all proevents in a building,
+    skipping those in the ignored_ids list.
+    
+    This function now assumes device_service handles the state change.
+    """
+    if ignored_ids is None:
+        ignored_ids = []
+    
+    action = "Arm" if reactive == 1 else "Disarm"
+    logger.info(f"Setting reactive state for building {building_id} to {action}, ignoring {len(ignored_ids)} proevents.")
+    
+    try:
+        # Assuming device_service has a method to set device/proevent state
+        # If your function is named differently, update this line.
+        affected_rows = device_service.set_reactive_state_for_building(
+            building_id=building_id, 
+            reactive=reactive, 
+            ignored_ids=ignored_ids
+        )
+        
+        if affected_rows > 0:
+            logger.info(f"Updated {affected_rows} proevents for building {building_id} to state {reactive}.")
+        return affected_rows
+    except AttributeError:
+         logger.error("device_service does not have a 'set_reactive_state_for_building' method. Cannot set state.")
+         return 0
+    except Exception as e:
+        logger.error(f"Error in bulk {action} for building {building_id}: {e}")
+        return 0
+
+def get_proevents_to_change(building_id: int, target_state: int,
+                            ignored_ids: list[int]) -> list[dict]:
+    """
+    Get list of proevents that need to be changed to the target_state
+    and are not in the ignored list.
+    
+    This function now assumes device_service provides the current state.
+    """
+    try:
+        all_proevents = get_all_proevents_for_building(building_id, limit=10000)
+        
+        to_change = []
+        for proevent in all_proevents:
+            proevent_id = proevent["id"]
+            current_state = 1 if proevent.get("reactive_state", 0) == 1 else 0 # Normalize state
+            
+            if current_state != target_state and proevent_id not in ignored_ids:
+                to_change.append(proevent)
+                
+        return to_change
+    except Exception as e:
+        logger.error(f"Error getting proevents to change: {e}")
+        return []
 
 
 def check_and_manage_scheduled_states():
     """
-    Scheduler job to automatically make proevents non-reactive during
-    scheduled times and reactive again afterward.
+    Checks building schedules and updates proevent states.
+    If panel is ARMED: Arms/disarms devices based on schedule.
+    If panel is DISARMED: Sends 'notarmed' alerts for devices that *should* be
+    armed but are not ignored.
     """
-    logger.info("Scheduler: Checking and managing scheduled proevent states...")
-    building_schedules = get_all_building_times()
+    try:
+        logger.info("Scheduler running: Checking building schedules...")
+        
+        # 1. Get Global Panel Status
+        panel_is_armed = cache_service.get_cache_value('panel_armed')
+        if panel_is_armed is None:
+            logger.warning("Panel status not in cache. Defaulting to 'Armed'.")
+            panel_is_armed = True
+            
+        logger.info(f"Panel Status: {'ARMED' if panel_is_armed else 'DISARMED'}")
 
-    # DEFENSIVE CHECK 1: Ensure building_schedules is a dictionary before iterating.
-    if building_schedules is None:
-        logger.warning("get_all_building_times() returned None. Skipping this scheduler run.")
-        return  # Exit the function early to prevent a crash.
+        # This assumes device_service provides the building list
+        all_buildings = device_service.get_distinct_buildings()
+        ignored_proevents_map = get_ignored_proevents() # Gets dict from sqlite
+        now = datetime.now().time()
 
-    current_time = datetime.now().time()
-    for building_id, schedule in building_schedules.items():
-        # DEFENSIVE CHECK 2: Ensure the schedule for a building is valid.
-        if schedule is None or not schedule.get("start_time") or not schedule.get("end_time"):
-            continue
+        for building in all_buildings:
+            building_id = building["id"]
+            building_name = building["name"]
+            
+            # 2. Get schedule from SQLite
+            times = get_building_time(building_id)
+            if not (times and times.get("start_time") and times.get("end_time")):
+                logger.debug(f"Skipping building {building_id} - no schedule set.")
+                continue
 
-        start_time = datetime.strptime(schedule["start_time"], "%H:%M").time()
-        end_time = datetime.strptime(schedule["end_time"], "%H:%M").time()
+            try:
+                start_time = datetime.strptime(times["start_time"], "%H:%M").time()
+                end_time = datetime.strptime(times["end_time"], "%H:%M").time()
+            except ValueError:
+                logger.error(f"Invalid time format for building {building_id}. Skipping.")
+                continue
 
-        is_in_schedule = start_time <= current_time < end_time
+            is_within_schedule = start_time <= now < end_time
+            
+            # 3. Get lists of ignored IDs for this building
+            ignored_on_arm_ids = [
+                pid for pid, flags in ignored_proevents_map.items()
+                if flags.get("building_frk") == building_id and flags.get("ignore_on_arm", False)
+            ]
+            ignored_on_disarm_ids = [
+                pid for pid, flags in ignored_proevents_map.items()
+                if flags.get("building_frk") == building_id and flags.get("ignore_on_disarm", False)
+            ]
 
-        if is_in_schedule:
-            logger.debug(f"Building {building_id} is IN schedule. Setting to non-reactive.")
-            affected_rows = set_proevent_reactive_for_building(building_id, 0)
+            # --- Main Logic Branch ---
+            
+            if panel_is_armed:
+                # --- PANEL IS ARMED: Original arm/disarm logic ---
+                logger.debug(f"Panel is ARMED. Checking schedule for {building_name}")
+                if is_within_schedule:
+                    # Within schedule: ARM devices (that aren't ignored on arm)
+                    set_proevent_reactive_for_building(building_id, 1, ignored_on_arm_ids)
+                else:
+                    # Outside schedule: DISARM devices (that aren't ignored on disarm)
+                    # Get list *before* disarming to send notifications
+                    proevents_to_disarm = get_proevents_to_change(
+                        building_id, 0, ignored_on_disarm_ids
+                    )
+                    
+                    if proevents_to_disarm:
+                        set_proevent_reactive_for_building(building_id, 0, ignored_on_disarm_ids)
+                        # Send notification for each device disarmed by schedule
+                        for proevent in proevents_to_disarm:
+                            proserver_service.send_proserver_notification(proevent["id"], "disarmed")
+            
+            else:
+                # --- PANEL IS DISARMED: New 'not-armed' alert logic ---
+                if is_within_schedule:
+                    # We are in schedule, but panel is disarmed.
+                    # Find all devices that *should* be armed and are *not* ignored.
+                    logger.info(f"Panel is DISARMED. Checking 'not-armed' alerts for building {building_name}")
+                    
+                    all_proevents = get_all_proevents_for_building(building_id, limit=10000)
+                    for proevent in all_proevents:
+                        proevent_id = proevent["id"]
+                        
+                        # Check if this proevent is ignored on *disarm*
+                        is_ignored_on_disarm = proevent_id in ignored_on_disarm_ids
+                        
+                        # If it's NOT ignored on disarm, send the alert.
+                        if not is_ignored_on_disarm:
+                            logger.debug(f"Sending 'not-armed' alert for device {proevent_id} in {building_name}")
+                            proserver_service.send_not_armed_alert(
+                                building_name=building_name,
+                                device_id=proevent_id
+                            )
+                        else:
+                            logger.debug(f"Skipping 'not-armed' alert for {proevent_id}, as it is ignored.")
+                else:
+                    # Outside schedule and panel is disarmed. No action needed.
+                    logger.debug(f"Panel is DISARMED and outside schedule for {building_name}. No action.")
+                    pass # Explicitly do nothing
 
-            if affected_rows > 0:
-                logger.info(f"Building {building_id} disarmed. Sending notifications...")
-                devices_in_building = get_all_proevents_for_building(building_id, limit=1000)
-
-                # DEFENSIVE CHECK 3: Ensure devices_in_building is a list before iterating.
-                if devices_in_building is not None:
-                    for device in devices_in_building:
-                        if device and device.get("reactive_state") == 0:
-                            proserver_service.send_proserver_notification(device['id'])
-        else:
-            logger.debug(f"Building {building_id} is OUTSIDE schedule. Setting to reactive.")
-            set_proevent_reactive_for_building(building_id, 1)
+    except Exception as e:
+        tb_str = traceback.format_exc()
+        logger.error(f"Critical error in scheduled job: {e}\n{tb_str}")

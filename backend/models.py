@@ -52,3 +52,8 @@ class IgnoredItemResponse(BaseModel):
 
 class IgnoredItemBulkRequest(BaseModel):
     items: List[IgnoredItemRequest]
+
+# --- ADDED Model for Panel Status ---
+
+class PanelStatus(BaseModel):
+    armed: bool

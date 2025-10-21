@@ -1,10 +1,11 @@
 # backend/routes.py
 
 from fastapi import APIRouter, HTTPException, Query
-from services import device_service, proevent_service
+from services import device_service, proevent_service, cache_service
 from models import (DeviceOut, DeviceActionRequest, DeviceActionSummaryResponse,
                    BuildingOut, BuildingTimeRequest, BuildingTimeResponse,
-                   IgnoredItemRequest, IgnoredItemResponse, IgnoredItemBulkRequest)
+                   IgnoredItemRequest, IgnoredItemResponse, IgnoredItemBulkRequest,
+                   PanelStatus) # Import new PanelStatus model
 from sqlite_config import (get_building_time, set_building_time,
                            get_ignored_proevents, set_proevent_ignore_status)
 from logger import get_logger
@@ -12,6 +13,37 @@ from logger import get_logger
 router = APIRouter()
 logger = get_logger(__name__)
 
+
+# --- NEW Panel Status Endpoints ---
+
+@router.get("/panel_status", response_model=PanelStatus)
+def get_panel_status():
+    """
+    Get the current global armed/disarmed status of the panel.
+    """
+    status = cache_service.get_cache_value('panel_armed')
+    if status is None:
+        # Default to armed if not set (should be set on startup, but as a fallback)
+        logger.warning("Panel status not found in cache, defaulting to 'armed'.")
+        status = True
+        cache_service.set_cache_value('panel_armed', status)
+    return PanelStatus(armed=status)
+
+@router.post("/panel_status", response_model=PanelStatus)
+def set_panel_status(status: PanelStatus):
+    """
+    Set the current global armed/disarmed status of the panel.
+    """
+    try:
+        cache_service.set_cache_value('panel_armed', status.armed)
+        logger.info(f"Global panel status set to: {'Armed' if status.armed else 'Disarmed'}")
+        return status
+    except Exception as e:
+        logger.error(f"Failed to set panel status in cache: {e}")
+        raise HTTPException(500, "Failed to update panel status")
+
+
+# --- Existing Routes ---
 
 @router.get("/buildings", response_model=list[BuildingOut])
 def list_buildings():

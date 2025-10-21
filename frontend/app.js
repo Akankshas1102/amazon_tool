@@ -17,6 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalSearch = document.getElementById('modalSearch');
     const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
 
+    // --- New Panel Status Elements ---
+    const panelStatusToggle = document.getElementById('panel-status-toggle');
+    const panelStatusText = document.getElementById('panel-status-text');
+
 
     let allBuildings = [];
     let selectedBuildingId = null;
@@ -37,9 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
                 throw new Error(errorData.detail || `Request failed with status ${response.status}`);
             }
-            // For POST requests that might not return JSON
-            if (response.status === 200 && response.headers.get('content-length') !== '0') {
-                 return await response.json();
+            // Handle JSON responses or no-content responses
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return await response.json();
             }
             return {}; // Return empty object for non-json responses
         } catch (error) {
@@ -48,6 +53,49 @@ document.addEventListener('DOMContentLoaded', () => {
             throw error;
         }
     }
+
+    // --- Panel Status Logic ---
+
+    async function loadPanelStatus() {
+        try {
+            const data = await apiRequest('panel_status');
+            panelStatusToggle.checked = data.armed;
+            updatePanelStatusText(data.armed);
+        } catch (error) {
+            console.error('Failed to load panel status:', error);
+            panelStatusText.textContent = 'Error';
+        }
+    }
+
+    function updatePanelStatusText(isArmed) {
+        if (isArmed) {
+            panelStatusText.textContent = 'Panel Armed';
+            panelStatusText.style.color = '#22c55e';
+        } else {
+            panelStatusText.textContent = 'Panel Disarmed';
+            panelStatusText.style.color = '#ef4444';
+        }
+    }
+
+    async function togglePanelStatus() {
+        const isArmed = panelStatusToggle.checked;
+        try {
+            await apiRequest('panel_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ armed: isArmed })
+            });
+            updatePanelStatusText(isArmed);
+            showNotification(`Panel ${isArmed ? 'Armed' : 'Disarmed'}`);
+        } catch (error) {
+            console.error('Failed to update panel status:', error);
+            // Revert on failure
+            panelStatusToggle.checked = !isArmed;
+            updatePanelStatusText(!isArmed);
+        }
+    }
+
+    // --- Building Selector Logic ---
 
     function setupBuildingSelector() {
         buildingSearch.addEventListener('input', () => {
@@ -123,8 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="toggle-btn">+</button>
                 <h2 class="building-title">${escapeHtml(building.name)}</h2>
                 <div class="building-actions">
-                    <button class="bulk-btn bulk-arm">Arm Building</button>
-                    <button class="bulk-btn bulk-disarm">Disarm Building</button>
+                    <button class="bulk-btn bulk-disarm">Set Ignore Flags</button>
                 </div>
                 <div class="building-time-control">
                     <label>Start:</label>
@@ -155,8 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const startTimeInput = card.querySelector('.start-time-input');
         const endTimeInput = card.querySelector('.end-time-input');
         const timeSaveBtn = card.querySelector('.time-save-btn');
-        const armBtn = card.querySelector('.bulk-arm');
-        const disarmBtn = card.querySelector('.bulk-disarm');
+        // "armBtn" removed
+        const disarmBtn = card.querySelector('.bulk-disarm'); // This is now "Set Ignore Flags"
         const itemSearch = card.querySelector('.item-search');
 
         const toggleVisibility = async () => {
@@ -209,13 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 400);
         });
 
-        armBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showIgnoreSelectionModal(card.dataset.buildingId, 'arm');
-        });
+        // "armBtn" listener removed
 
+        // This listener for "Set Ignore Flags" (formerly "Disarm Building")
+        // now correctly shows the modal for setting ignore flags for the "disarm" state.
         disarmBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            // We pass 'disarm' to correctly set the 'is_ignored_on_disarm' flag
             showIgnoreSelectionModal(card.dataset.buildingId, 'disarm');
         });
     }
@@ -248,10 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
         li.dataset.itemId = item.id;
         li.dataset.state = state;
 
-        const stateClass = state === 'armed' ? 'state-armed' : (state === 'disarmed' ? 'state-disarmed' : 'state-unknown');
+        // Use 'state-unknown' for both 'unknown' and 'disarmed' for indicator
+        const stateClass = state === 'armed' ? 'status-all-armed' : 'state-unknown';
 
         li.innerHTML = `
-            <span class="device-state-indicator ${stateClass}"></span>
+            <span class="device-state-indicator ${stateClass}" style="background-color: ${state === 'armed' ? '#22c55e' : '#f59e0b'};"></span>
             <div class="device-name">${escapeHtml(item.name)} (ID: ${item.id})</div>
         `;
         return li;
@@ -289,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function showIgnoreSelectionModal(buildingId, action) {
-        modalTitle.textContent = `Select proevents to ignore when ${action}ing`;
+        // Updated title to be more generic, as this modal is now only for setting ignore flags.
+        modalTitle.textContent = `Select proevents to ignore`;
         modalItemList.innerHTML = '<div class="loader">Loading...</div>';
         ignoreModal.style.display = 'block';
         
@@ -303,17 +352,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'device-item';
             div.dataset.itemId = item.id;
+            
+            // The modal will now show *both* ignore flags, but only the 'disarm' one is
+            // relevant to the button click. The user can manage both here.
             div.innerHTML = `
                 <div class="device-name">${escapeHtml(item.name)}</div>
                 <label class="ignore-alarm-label">
-                    <input type="checkbox" class="ignore-item-checkbox" ${item.is_ignored_on_disarm && action === 'disarm' || item.is_ignored_on_arm && action === 'arm' ? 'checked' : ''} />
-                    Ignore
+                    <input type="checkbox" class="ignore-item-checkbox-arm" ${item.is_ignored_on_arm ? 'checked' : ''} />
+                    Ignore on Arm
+                </label>
+                <label class="ignore-alarm-label">
+                    <input type="checkbox" class="ignore-item-checkbox-disarm" ${item.is_ignored_on_disarm ? 'checked' : ''} />
+                    Ignore on Disarm
                 </label>
             `;
             modalItemList.appendChild(div);
         });
         
-        // --- Event Handlers for new modal features ---
+        // --- Event Handlers for modal features ---
         
         modalSearch.oninput = () => {
             const query = modalSearch.value.toLowerCase();
@@ -331,8 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
             modalItems.forEach(item => {
                 // Only toggle checkboxes for visible items
                 if (item.style.display !== 'none') {
-                    const checkbox = item.querySelector('.ignore-item-checkbox');
-                    if (checkbox) checkbox.checked = isSelectAll;
+                    const checkboxArm = item.querySelector('.ignore-item-checkbox-arm');
+                    const checkboxDisarm = item.querySelector('.ignore-item-checkbox-disarm');
+                    // This button now controls *both* checkboxes for simplicity
+                    if (checkboxArm) checkboxArm.checked = isSelectAll;
+                    if (checkboxDisarm) checkboxDisarm.checked = isSelectAll;
                 }
             });
             modalSelectAllBtn.textContent = isSelectAll ? 'Deselect All' : 'Select All';
@@ -341,29 +400,18 @@ document.addEventListener('DOMContentLoaded', () => {
         modalConfirmBtn.onclick = async () => {
             const selectedItems = [];
             const itemElements = modalItemList.querySelectorAll('.device-item');
+            
             itemElements.forEach(itemEl => {
-                const checkbox = itemEl.querySelector('.ignore-item-checkbox');
+                const checkboxArm = itemEl.querySelector('.ignore-item-checkbox-arm');
+                const checkboxDisarm = itemEl.querySelector('.ignore-item-checkbox-disarm');
                 const itemId = parseInt(itemEl.dataset.itemId, 10);
                 
-                const originalItem = items.find(i => i.id === itemId);
-
-                // Start with the original values to preserve the other state
-                let ignoreOnArm = originalItem.is_ignored_on_arm;
-                let ignoreOnDisarm = originalItem.is_ignored_on_disarm;
-
-                // **FIXED LOGIC**: Only update the relevant ignore flag based on the action
-                if (action === 'arm') {
-                    ignoreOnArm = checkbox.checked;
-                } else { // action === 'disarm'
-                    ignoreOnDisarm = checkbox.checked;
-                }
-
                 selectedItems.push({
                     item_id: itemId,
                     building_frk: parseInt(buildingId),
                     device_prk: itemId, // Using item_id as a placeholder for device_prk
-                    ignore_on_arm: ignoreOnArm,
-                    ignore_on_disarm: ignoreOnDisarm
+                    ignore_on_arm: checkboxArm.checked,
+                    ignore_on_disarm: checkboxDisarm.checked
                 });
             });
 
@@ -416,6 +464,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initialize() {
         setupBuildingSelector();
         await loadAllBuildings();
+        // --- Load panel status on init ---
+        await loadPanelStatus();
+        // --- Add listener for toggle ---
+        panelStatusToggle.addEventListener('change', togglePanelStatus);
     }
 
     initialize();
