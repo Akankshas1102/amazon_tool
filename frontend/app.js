@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalSearch = document.getElementById('modalSearch');
     const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
 
-    // --- New Panel Status Elements ---
-    const panelStatusToggle = document.getElementById('panel-status-toggle');
-    const panelStatusText = document.getElementById('panel-status-text');
+    // --- Panel Status Elements REMOVED ---
+    // const panelStatusToggle = document.getElementById('panel-status-toggle');
+    // const panelStatusText = document.getElementById('panel-status-text');
 
 
     let allBuildings = [];
@@ -54,46 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Panel Status Logic ---
-
-    async function loadPanelStatus() {
-        try {
-            const data = await apiRequest('panel_status');
-            panelStatusToggle.checked = data.armed;
-            updatePanelStatusText(data.armed);
-        } catch (error) {
-            console.error('Failed to load panel status:', error);
-            panelStatusText.textContent = 'Error';
-        }
-    }
-
-    function updatePanelStatusText(isArmed) {
-        if (isArmed) {
-            panelStatusText.textContent = 'Panel Armed';
-            panelStatusText.style.color = '#22c55e';
-        } else {
-            panelStatusText.textContent = 'Panel Disarmed';
-            panelStatusText.style.color = '#ef4444';
-        }
-    }
-
-    async function togglePanelStatus() {
-        const isArmed = panelStatusToggle.checked;
-        try {
-            await apiRequest('panel_status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ armed: isArmed })
-            });
-            updatePanelStatusText(isArmed);
-            showNotification(`Panel ${isArmed ? 'Armed' : 'Disarmed'}`);
-        } catch (error) {
-            console.error('Failed to update panel status:', error);
-            // Revert on failure
-            panelStatusToggle.checked = !isArmed;
-            updatePanelStatusText(!isArmed);
-        }
-    }
+    // --- Panel Status Logic REMOVED ---
+    // async function loadPanelStatus() { ... }
+    // function updatePanelStatusText(isArmed) { ... }
+    // async function togglePanelStatus() { ... }
 
     // --- Building Selector Logic ---
 
@@ -353,17 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = 'device-item';
             div.dataset.itemId = item.id;
             
-            // The modal will now show *both* ignore flags, but only the 'disarm' one is
-            // relevant to the button click. The user can manage both here.
+            // MODIFIED: Removed "Ignore on Arm" checkbox
+            // MODIFIED: Renamed "Ignore on Disarm" to "Ignore Alert"
+            // MODIFIED: Renamed checkbox class to "ignore-item-checkbox"
+            // MODIFIED: Updated checked status to use "item.is_ignored"
             div.innerHTML = `
                 <div class="device-name">${escapeHtml(item.name)}</div>
                 <label class="ignore-alarm-label">
-                    <input type="checkbox" class="ignore-item-checkbox-arm" ${item.is_ignored_on_arm ? 'checked' : ''} />
-                    Ignore on Arm
-                </label>
-                <label class="ignore-alarm-label">
-                    <input type="checkbox" class="ignore-item-checkbox-disarm" ${item.is_ignored_on_disarm ? 'checked' : ''} />
-                    Ignore on Disarm
+                    <input type="checkbox" class="ignore-item-checkbox" ${item.is_ignored ? 'checked' : ''} />
+                    Ignore Alert
                 </label>
             `;
             modalItemList.appendChild(div);
@@ -387,11 +349,9 @@ document.addEventListener('DOMContentLoaded', () => {
             modalItems.forEach(item => {
                 // Only toggle checkboxes for visible items
                 if (item.style.display !== 'none') {
-                    const checkboxArm = item.querySelector('.ignore-item-checkbox-arm');
-                    const checkboxDisarm = item.querySelector('.ignore-item-checkbox-disarm');
-                    // This button now controls *both* checkboxes for simplicity
-                    if (checkboxArm) checkboxArm.checked = isSelectAll;
-                    if (checkboxDisarm) checkboxDisarm.checked = isSelectAll;
+                    // MODIFIED: Only one checkbox to control
+                    const checkbox = item.querySelector('.ignore-item-checkbox');
+                    if (checkbox) checkbox.checked = isSelectAll;
                 }
             });
             modalSelectAllBtn.textContent = isSelectAll ? 'Deselect All' : 'Select All';
@@ -402,16 +362,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemElements = modalItemList.querySelectorAll('.device-item');
             
             itemElements.forEach(itemEl => {
-                const checkboxArm = itemEl.querySelector('.ignore-item-checkbox-arm');
-                const checkboxDisarm = itemEl.querySelector('.ignore-item-checkbox-disarm');
+                // MODIFIED: Find the single checkbox
+                const checkbox = itemEl.querySelector('.ignore-item-checkbox');
                 const itemId = parseInt(itemEl.dataset.itemId, 10);
                 
+                // MODIFIED: Send "ignore" instead of "ignore_on_disarm"
+                // "ignore_on_arm" is removed
                 selectedItems.push({
                     item_id: itemId,
                     building_frk: parseInt(buildingId),
                     device_prk: itemId, // Using item_id as a placeholder for device_prk
-                    ignore_on_arm: checkboxArm.checked,
-                    ignore_on_disarm: checkboxDisarm.checked
+                    ignore: checkbox.checked
                 });
             });
 
@@ -464,10 +425,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initialize() {
         setupBuildingSelector();
         await loadAllBuildings();
-        // --- Load panel status on init ---
-        await loadPanelStatus();
-        // --- Add listener for toggle ---
-        panelStatusToggle.addEventListener('change', togglePanelStatus);
+        // --- Panel status logic REMOVED from initialize() ---
+        // await loadPanelStatus();
+        // panelStatusToggle.addEventListener('change', togglePanelStatus);
     }
 
     initialize();

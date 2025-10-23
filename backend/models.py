@@ -14,8 +14,9 @@ class DeviceOut(BaseModel):
     name: str
     state: str
     building_name: Optional[str] = None
-    is_ignored_on_arm: bool = False
-    is_ignored_on_disarm: bool = False
+    # MODIFIED: Renamed "is_ignored_on_disarm" to "is_ignored"
+    # "is_ignored_on_arm" removed
+    is_ignored: bool = False
 
 class DeviceActionRequest(BaseModel):
     building_id: int
@@ -43,8 +44,9 @@ class IgnoredItemRequest(BaseModel):
     item_id: int
     building_frk: int  # Added
     device_prk: int    # Added
-    ignore_on_arm: bool
-    ignore_on_disarm: bool
+    # MODIFIED: Renamed "ignore_on_disarm" to "ignore"
+    # "ignore_on_arm" removed
+    ignore: bool
 
 class IgnoredItemResponse(BaseModel):
     item_id: int
@@ -54,6 +56,7 @@ class IgnoredItemBulkRequest(BaseModel):
     items: List[IgnoredItemRequest]
 
 # --- ADDED Model for Panel Status ---
-
+# This model remains, but the frontend UI for it is gone.
+# The backend logic still depends on it.
 class PanelStatus(BaseModel):
     armed: bool

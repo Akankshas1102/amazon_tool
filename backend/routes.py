@@ -82,13 +82,14 @@ def list_proevents(
     proevents_out = []
     for p in proevents:
         ignore_status = ignored_proevents.get(p["id"], {})
+        # MODIFIED: Use new DeviceOut model
         proevent_out = DeviceOut(
             id=p["id"],
             name=p["name"],
             state="armed" if p["reactive_state"] == 1 else "disarmed",
             building_name=None, # You might want to populate this from the building table
-            is_ignored_on_arm=ignore_status.get("ignore_on_arm", False),
-            is_ignored_on_disarm=ignore_status.get("ignore_on_disarm", False)
+            # MODIFIED: Renamed to "is_ignored" and pointing to "ignore_on_disarm"
+            is_ignored=ignore_status.get("ignore_on_disarm", False)
         )
         proevents_out.append(proevent_out)
 
@@ -142,14 +143,18 @@ def set_building_scheduled_time(building_id: int, request: BuildingTimeRequest):
         updated=True
     )
 
-# UPDATED: Endpoint to handle new data
+# MODIFIED: Endpoint to handle new simplified model
 @router.post("/proevents/ignore", response_model=IgnoredItemResponse)
 def manage_ignored_proevents(req: IgnoredItemRequest):
     """
     Set the ignore status for a proevent.
     """
+    # MODIFIED: "ignore_on_arm" is hardcoded to False.
+    # "ignore_on_disarm" is set by the new "ignore" flag.
     success = set_proevent_ignore_status(
-        req.item_id, req.building_frk, req.device_prk, req.ignore_on_arm, req.ignore_on_disarm
+        req.item_id, req.building_frk, req.device_prk, 
+        ignore_on_arm=False, 
+        ignore_on_disarm=req.ignore
     )
 
     if not success:
@@ -160,15 +165,19 @@ def manage_ignored_proevents(req: IgnoredItemRequest):
         success=True
     )
 
-# UPDATED: Endpoint to handle new data
+# MODIFIED: Endpoint to handle new simplified model
 @router.post("/proevents/ignore/bulk")
 def manage_ignored_proevents_bulk(req: IgnoredItemBulkRequest):
     """
     Set the ignore status for multiple proevents.
     """
     for item in req.items:
+        # MODIFIED: "ignore_on_arm" is hardcoded to False.
+        # "ignore_on_disarm" is set by the new "ignore" flag.
         set_proevent_ignore_status(
-            item.item_id, item.building_frk, item.device_prk, item.ignore_on_arm, item.ignore_on_disarm
+            item.item_id, item.building_frk, item.device_prk, 
+            ignore_on_arm=False, 
+            ignore_on_disarm=item.ignore
         )
 
     return {"status": "success"}
