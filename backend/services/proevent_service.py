@@ -1,6 +1,10 @@
 # backend/services/proevent_service.py
 
+# --- THIS IS THE FIX ---
+# Removed get_db and ProEvent, which don't exist in sqlite_config.py
 from sqlite_config import get_building_time, get_ignored_proevents
+# --- END OF FIX ---
+
 from services import device_service, proserver_service, cache_service
 from logger import get_logger
 from datetime import datetime
@@ -19,17 +23,13 @@ def get_all_proevents_for_building(building_id: int, search: str | None = None,
     """
     logger.debug(f"Fetching proevents for building {building_id} with search='{search}'")
     try:
-        # Assuming device_service has a method to get devices/proevents
-        # This is a necessary assumption as the proevents are not in the SQLite DB.
-        # If your function in device_service is named differently, update this line.
+        # This function MUST exist in your device_service.py file
         proevents = device_service.get_devices(
             building_id=building_id, search=search, limit=limit, offset=offset
         )
         return proevents
     except AttributeError:
-        logger.error("device_service does not have a 'get_devices' method. Cannot fetch proevents.")
-        # Simulating the function signature from routes.py, assuming device_service has it
-        logger.warning("Falling back to dummy 'get_devices' call in proevent_service. This should be fixed.")
+        logger.error("CRITICAL: device_service.get_devices() function is missing from device_service.py.")
         return []
     except Exception as e:
         logger.error(f"Error fetching proevents: {e}")
@@ -50,8 +50,7 @@ def set_proevent_reactive_for_building(building_id: int, reactive: int,
     logger.info(f"Setting reactive state for building {building_id} to {action}, ignoring {len(ignored_ids)} proevents.")
     
     try:
-        # Assuming device_service has a method to set device/proevent state
-        # If your function is named differently, update this line.
+        # This function MUST exist in your device_service.py file
         affected_rows = device_service.set_reactive_state_for_building(
             building_id=building_id, 
             reactive=reactive, 
@@ -62,7 +61,7 @@ def set_proevent_reactive_for_building(building_id: int, reactive: int,
             logger.info(f"Updated {affected_rows} proevents for building {building_id} to state {reactive}.")
         return affected_rows
     except AttributeError:
-         logger.error("device_service does not have a 'set_reactive_state_for_building' method. Cannot set state.")
+         logger.error("CRITICAL: device_service.set_reactive_state_for_building() function is missing from device_service.py.")
          return 0
     except Exception as e:
         logger.error(f"Error in bulk {action} for building {building_id}: {e}")
@@ -122,8 +121,10 @@ def check_and_manage_scheduled_states():
             
             # 2. Get schedule from SQLite
             times = get_building_time(building_id)
-            if not (times and times.get("start_time") and times.get("end_time")):
-                logger.debug(f"Skipping building {building_id} - no schedule set.")
+            
+            # Safer check for None, str, or invalid dicts
+            if not isinstance(times, dict) or not times.get("start_time") or not times.get("end_time"):
+                logger.warning(f"Skipping building {building_id} - invalid or no schedule set (times: {times}).")
                 continue
 
             try:

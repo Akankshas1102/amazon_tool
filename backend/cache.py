@@ -1,12 +1,10 @@
 import json
 import os
-# from config import CACHE_FILE  <-- This was the error, it's removed.
 from logger import get_logger
 import threading
 
 logger = get_logger(__name__)
 
-# Define the cache file path directly in this file
 CACHE_FILE = "app_cache.json"
 _cache = {}
 _cache_lock = threading.Lock()
@@ -23,7 +21,14 @@ def load_cache():
         if not os.path.exists(CACHE_FILE):
             logger.warning(f"Cache file not found at {CACHE_FILE}. Creating a new one.")
             _cache = {}
-            save_cache(_cache) # Create the file
+            # --- FIX: Write the empty cache file directly instead of calling save_cache() ---
+            try:
+                with open(CACHE_FILE, 'w') as f:
+                    json.dump(_cache, f, indent=4)
+                logger.info("Cache file created.")
+            except IOError as e:
+                logger.error(f"Failed to create cache file: {e}")
+            # --- END OF FIX ---
             return _cache
 
         try:
