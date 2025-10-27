@@ -96,13 +96,36 @@ def list_proevents(
     return proevents_out
 
 
+# --- MODIFIED /devices/action ENDPOINT ---
 @router.post("/devices/action", response_model=DeviceActionSummaryResponse)
 def device_action(req: DeviceActionRequest):
     action = req.action.lower()
     reactive = 1 if action == "arm" else 0
+    
+    # --- START OF FIX ---
+    # Get the map of all ignored proevents from the database
+    ignored_proevents_map = get_ignored_proevents()
+    ignored_ids = []
+    
+    if action == "disarm":
+        # If disarming, build the list of IDs to ignore for this building
+        ignored_ids = [
+            pid for pid, flags in ignored_proevents_map.items()
+            if flags.get("building_frk") == req.building_id and flags.get("ignore_on_disarm", False)
+        ]
+        logger.info(f"Bulk disarm for building {req.building_id}, ignoring {len(ignored_ids)} proevents.")
+    elif action == "arm":
+        # If arming, we ignore no devices (as per scheduler logic)
+        ignored_ids = []
+        logger.info(f"Bulk arm for building {req.building_id}, ignoring 0 proevents.")
+    # --- END OF FIX ---
 
     try:
-        affected_rows = proevent_service.set_proevent_reactive_for_building(req.building_id, reactive)
+        # Pass the correctly populated ignored_ids list to the service
+        affected_rows = proevent_service.set_proevent_reactive_for_building(
+            req.building_id, reactive, ignored_ids
+        )
+        
         if affected_rows == 0:
             logger.warning(f"No proevents updated for building {req.building_id}.")
         return DeviceActionSummaryResponse(

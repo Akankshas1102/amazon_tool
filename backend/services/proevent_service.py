@@ -114,6 +114,8 @@ def check_and_manage_scheduled_states():
         all_buildings = device_service.get_distinct_buildings()
         ignored_proevents_map = get_ignored_proevents() # Gets dict from sqlite
         now = datetime.now().time()
+        # Truncate now to the minute for a reliable start time check
+        now_time_minute = now.replace(second=0, microsecond=0)
 
         for building in all_buildings:
             building_id = building["id"]
@@ -134,6 +136,8 @@ def check_and_manage_scheduled_states():
                 logger.error(f"Invalid time format for building {building_id}. Skipping.")
                 continue
 
+            # --- MODIFICATION: Added check for exact start time ---
+            is_start_time = (now_time_minute == start_time)
             is_within_schedule = start_time <= now < end_time
             
             # 3. Get lists of ignored IDs for this building
@@ -150,6 +154,15 @@ def check_and_manage_scheduled_states():
             if panel_is_armed:
                 # --- PANEL IS ARMED: Original arm/disarm logic ---
                 logger.debug(f"Panel is ARMED. Checking schedule for {building_name}")
+                
+                # --- MODIFICATION: Send common alert exactly at start time ---
+                if is_start_time:
+                    logger.info(f"Panel is ARMED at schedule start for {building_name}. Sending common alert.")
+                    proserver_service.send_proserver_notification(
+                        building_name=building_name,
+                        device_id=None # Assuming None signifies a common alert
+                    )
+
                 if is_within_schedule:
                     # Within schedule: ARM devices
                     # MODIFIED: Pass an empty list "[]" to "ignored_ids".
@@ -166,13 +179,13 @@ def check_and_manage_scheduled_states():
                         # This is the "Disarm All" (except ignored) command
                         set_proevent_reactive_for_building(building_id, 0, ignored_on_disarm_ids)
                         
-                        # Send notification for each device that was *actually* disarmed
-                        for proevent in proevents_to_disarm:
-                            # MODIFIED: Call new unified alert function
-                            proserver_service.send_proserver_notification(
-                                building_name=building_name,
-                                device_id=proevent["id"]
-                            )
+                        # --- MODIFICATION: Send ONE common alert, not multiple ---
+                        logger.info(f"Panel is ARMED, outside schedule. Sent common disarm alert for {building_name}.")
+                        proserver_service.send_proserver_notification(
+                            building_name=building_name,
+                            device_id=None # Assuming None signifies a common alert
+                        )
+                        # --- REMOVED loop that sent multiple alerts ---
             
             else:
                 # --- PANEL IS DISARMED: New 'not-armed' alert logic ---
@@ -182,22 +195,26 @@ def check_and_manage_scheduled_states():
                     logger.info(f"Panel is DISARMED. Checking 'not-armed' alerts for building {building_name}")
                     
                     all_proevents = get_all_proevents_for_building(building_id, limit=10000)
+                    
+                    # --- MODIFICATION: Check if ANY alert is needed, then send ONE ---
+                    alert_needed = False
                     for proevent in all_proevents:
                         proevent_id = proevent["id"]
-                        
-                        # Check if this proevent is ignored on *disarm*
                         is_ignored_on_disarm = proevent_id in ignored_on_disarm_ids
                         
-                        # If it's NOT ignored on disarm, send the alert.
                         if not is_ignored_on_disarm:
-                            logger.debug(f"Sending 'not-armed' alert for device {proevent_id} in {building_name}")
-                            # MODIFIED: Call new unified alert function
-                            proserver_service.send_proserver_notification(
-                                building_name=building_name,
-                                device_id=proevent_id
-                            )
-                        else:
-                            logger.debug(f"Skipping 'not-armed' alert for {proevent_id}, as it is ignored.")
+                            alert_needed = True
+                            break # Found one, no need to check rest
+                    
+                    if alert_needed:
+                        logger.debug(f"Panel is DISARMED within schedule. Sending common 'not-armed' alert for {building_name}")
+                        proserver_service.send_proserver_notification(
+                            building_name=building_name,
+                            device_id=None # Assuming None signifies a common "not-armed" alert
+                        )
+                    else:
+                         logger.debug(f"Panel is DISARMED within schedule for {building_name}, but all proevents are ignored. No alert.")
+                    # --- REMOVED loop that sent multiple alerts ---
                 else:
                     # Outside schedule and panel is disarmed. No action needed.
                     logger.debug(f"Panel is DISARMED and outside schedule for {building_name}. No action.")
