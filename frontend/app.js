@@ -1,67 +1,84 @@
 // frontend/app.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'http://127.0.0.1:8000/api';
-    const buildingsContainer = document.getElementById('deviceList');
-    const loader = document.getElementById('loader');
-    const notification = document.getElementById('notification');
-    const buildingSearch = document.querySelector('.building-search');
-    const buildingDropdown = document.querySelector('.building-dropdown');
-    const clearFilter = document.querySelector('.clear-filter');
-    const ignoreModal = document.getElementById('ignoreModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalItemList = document.getElementById('modalItemList');
-    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-    const modalCancelBtn = document.getElementById('modalCancelBtn');
-    const closeButton = document.querySelector('.close-button');
-    const modalSearch = document.getElementById('modalSearch');
-    const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
+    App.initialize();
+});
 
-    // --- Panel Status Elements REMOVED ---
-    // const panelStatusToggle = document.getElementById('panel-status-toggle');
-    // const panelStatusText = document.getElementById('panel-status-text');
+const App = {
+    // 1. Configuration and State
+    API_BASE_URL: 'http://127.0.0.1:8000/api',
+    BUILD_PAGE_SIZE: 100,
+    allBuildings: [],
+    selectedBuildingId: null,
 
+    // 2. Cached DOM Elements
+    elements: {},
 
-    let allBuildings = [];
-    let selectedBuildingId = null;
-    const BUILD_PAGE_SIZE = 100;
+    // 3. Initialization Function
+    initialize() {
+        // Cache all DOM elements
+        this.elements.buildingsContainer = document.getElementById('deviceList');
+        this.elements.loader = document.getElementById('loader');
+        this.elements.notification = document.getElementById('notification');
+        this.elements.buildingSearch = document.querySelector('.building-search');
+        this.elements.buildingDropdown = document.querySelector('.building-dropdown');
+        this.elements.clearFilter = document.querySelector('.clear-filter');
+        this.elements.ignoreModal = document.getElementById('ignoreModal');
+        this.elements.modalTitle = document.getElementById('modalTitle');
+        this.elements.modalItemList = document.getElementById('modalItemList');
+        this.elements.modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        this.elements.modalCancelBtn = document.getElementById('modalCancelBtn');
+        this.elements.closeButton = document.querySelector('.close-button');
+        this.elements.modalSearch = document.getElementById('modalSearch');
+        this.elements.modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
 
-    function showNotification(text, isError = false, timeout = 3000) {
+        // Setup event listeners and load initial data
+        this.setupBuildingSelector();
+        this.loadAllBuildings();
+    },
+
+    // 4. Utility Methods (Child Functions)
+    
+    showNotification(text, isError = false, timeout = 3000) {
+        const { notification } = this.elements;
         notification.textContent = text;
         notification.style.backgroundColor = isError ? '#ef4444' : '#333';
         notification.classList.add('show');
         setTimeout(() => notification.classList.remove('show'), timeout);
-    }
+    },
 
-    async function apiRequest(endpoint, options = {}) {
-        const url = `${API_BASE_URL}/${endpoint}`;
+    async apiRequest(endpoint, options = {}) {
+        const url = `${this.API_BASE_URL}/${endpoint}`;
         try {
             const response = await fetch(url, options);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
                 throw new Error(errorData.detail || `Request failed with status ${response.status}`);
             }
-            // Handle JSON responses or no-content responses
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 return await response.json();
             }
-            return {}; // Return empty object for non-json responses
+            return {};
         } catch (error) {
             console.error(`API request to ${endpoint} failed:`, error);
-            showNotification(error.message, true);
+            this.showNotification(error.message, true);
             throw error;
         }
-    }
+    },
 
-    // --- Panel Status Logic REMOVED ---
-    // async function loadPanelStatus() { ... }
-    // function updatePanelStatusText(isArmed) { ... }
-    // async function togglePanelStatus() { ... }
+    escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, s => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;',
+            '"': '&quot;', "'": '&#39;'
+        }[s]));
+    },
 
-    // --- Building Selector Logic ---
+    // 5. Building List & Search Logic
+    
+    setupBuildingSelector() {
+        const { buildingSearch, buildingDropdown, clearFilter } = this.elements;
 
-    function setupBuildingSelector() {
         buildingSearch.addEventListener('input', () => {
             const query = buildingSearch.value.toLowerCase();
             buildingDropdown.innerHTML = '';
@@ -72,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const filtered = allBuildings.filter(b =>
+            const filtered = this.allBuildings.filter(b =>
                 b.name.toLowerCase().includes(query)
             );
 
@@ -81,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const option = document.createElement('div');
                     option.className = 'building-option';
                     option.textContent = building.name;
-                    option.addEventListener('click', () => selectBuilding(building));
+                    option.addEventListener('click', () => this.selectBuilding(building));
                     buildingDropdown.appendChild(option);
                 });
                 buildingDropdown.style.display = 'block';
@@ -90,40 +107,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 buildingDropdown.style.display = 'none';
             }
         });
+
         clearFilter.addEventListener('click', () => {
             buildingSearch.value = '';
             buildingDropdown.style.display = 'none';
             clearFilter.style.display = 'none';
-            selectedBuildingId = null;
-            loadAllBuildings();
+            this.selectedBuildingId = null;
+            this.loadAllBuildings();
         });
+
         document.addEventListener('click', (e) => {
             if (!buildingSearch.contains(e.target) && !buildingDropdown.contains(e.target)) {
                 buildingDropdown.style.display = 'none';
             }
         });
-    }
+    },
 
-    function selectBuilding(building) {
+    selectBuilding(building) {
+        const { buildingSearch, buildingDropdown, clearFilter } = this.elements;
         buildingSearch.value = building.name;
         buildingDropdown.style.display = 'none';
-        selectedBuildingId = building.id;
+        this.selectedBuildingId = building.id;
         clearFilter.style.display = 'block';
-        loadFilteredBuilding(building);
-    }
+        this.loadFilteredBuilding(building);
+    },
 
-    async function loadFilteredBuilding(building) {
+    async loadFilteredBuilding(building) {
+        const { buildingsContainer } = this.elements;
         buildingsContainer.innerHTML = '';
-        const card = createBuildingCard(building);
+        const card = this.createBuildingCard(building);
         buildingsContainer.appendChild(card);
-        await loadItemsForBuilding(card);
+        await this.loadItemsForBuilding(card);
         const body = card.querySelector('.building-body');
         const toggleBtn = card.querySelector('.toggle-btn');
         body.style.display = 'block';
         toggleBtn.textContent = '-';
-    }
+    },
 
-    function createBuildingCard(building) {
+    async loadAllBuildings() {
+        const { loader, buildingsContainer } = this.elements;
+        try {
+            loader.style.display = 'block';
+            this.allBuildings = await this.apiRequest('buildings');
+            buildingsContainer.innerHTML = '';
+            this.allBuildings.forEach(building => {
+                buildingsContainer.appendChild(this.createBuildingCard(building));
+            });
+        } finally {
+            loader.style.display = 'none';
+        }
+    },
+
+    // 6. Building Card Logic
+    
+    createBuildingCard(building) {
         const card = document.createElement('div');
         card.className = 'building-card';
         card.dataset.buildingId = building.id;
@@ -133,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
             <div class="building-header">
                 <button class="toggle-btn">+</button>
-                <h2 class="building-title">${escapeHtml(building.name)}</h2>
+                <h2 class="building-title">${this.escapeHtml(building.name)}</h2>
                 <div class="building-actions">
                     <button class="bulk-btn bulk-disarm">Set Ignore Flags</button>
                 </div>
@@ -154,11 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="building-loader" style="display:none;">Loading...</div>
             </div>
         `;
-        setupBuildingCardEvents(card);
+        this.setupBuildingCardEvents(card);
         return card;
-    }
+    },
 
-    function setupBuildingCardEvents(card) {
+    setupBuildingCardEvents(card) {
         const itemsList = card.querySelector('.items-list');
         const header = card.querySelector('.building-header');
         const body = card.querySelector('.building-body');
@@ -166,8 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const startTimeInput = card.querySelector('.start-time-input');
         const endTimeInput = card.querySelector('.end-time-input');
         const timeSaveBtn = card.querySelector('.time-save-btn');
-        // "armBtn" removed
-        const disarmBtn = card.querySelector('.bulk-disarm'); // This is now "Set Ignore Flags"
+        const disarmBtn = card.querySelector('.bulk-disarm');
         const itemSearch = card.querySelector('.item-search');
 
         const toggleVisibility = async () => {
@@ -175,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body.style.display = isHidden ? 'block' : 'none';
             toggleBtn.textContent = isHidden ? '-' : '+';
             if (isHidden && itemsList.children.length === 0) {
-                await loadItemsForBuilding(card);
+                await this.loadItemsForBuilding(card);
             }
         };
 
@@ -192,12 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const endTime = endTimeInput.value;
 
             if (!startTime || !endTime) {
-                showNotification('Both start and end times are required.', true);
+                this.showNotification('Both start and end times are required.', true);
                 return;
             }
 
             try {
-                await apiRequest(`buildings/${buildingId}/time`, {
+                await this.apiRequest(`buildings/${buildingId}/time`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -206,9 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         end_time: endTime
                     })
                 });
-                showNotification('Building schedule updated successfully');
+                this.showNotification('Building schedule updated successfully');
             } catch (error) {
-                showNotification('Failed to update building schedule', true);
+                this.showNotification('Failed to update building schedule', true);
             }
         });
 
@@ -216,22 +252,19 @@ document.addEventListener('DOMContentLoaded', () => {
         itemSearch.addEventListener('input', () => {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
-                loadItemsForBuilding(card, true, itemSearch.value.trim());
+                this.loadItemsForBuilding(card, true, itemSearch.value.trim());
             }, 400);
         });
 
-        // "armBtn" listener removed
-
-        // This listener for "Set Ignore Flags" (formerly "Disarm Building")
-        // now correctly shows the modal for setting ignore flags for the "disarm" state.
         disarmBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            // We pass 'disarm' to correctly set the 'is_ignored_on_disarm' flag
-            showIgnoreSelectionModal(card.dataset.buildingId, 'disarm');
+            this.showIgnoreSelectionModal(card.dataset.buildingId, 'disarm');
         });
-    }
+    },
 
-    async function loadItemsForBuilding(card, reset = false, search = '') {
+    // 7. Item/Device Logic
+    
+    async loadItemsForBuilding(card, reset = false, search = '') {
         const buildingId = card.dataset.buildingId;
         const itemsList = card.querySelector('.items-list');
         const loader = card.querySelector('.building-loader');
@@ -240,36 +273,35 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.style.display = 'block';
 
         try {
-            const items = await apiRequest(`devices?building=${buildingId}&limit=${BUILD_PAGE_SIZE}&search=${encodeURIComponent(search)}`);
+            const items = await this.apiRequest(`devices?building=${buildingId}&limit=${this.BUILD_PAGE_SIZE}&search=${encodeURIComponent(search)}`);
             if (items.length === 0 && reset) {
                 itemsList.innerHTML = '<li class="muted">No proevents found.</li>';
             } else {
-                items.forEach(item => itemsList.appendChild(createItem(item)));
+                items.forEach(item => itemsList.appendChild(this.createItem(item)));
             }
         } finally {
             loader.style.display = 'none';
-            updateBuildingStatus(card);
+            this.updateBuildingStatus(card);
         }
-    }
+    },
 
-    function createItem(item) {
+    createItem(item) {
         const li = document.createElement('li');
         const state = (item.state || 'unknown').toLowerCase();
         li.className = 'device-item';
         li.dataset.itemId = item.id;
         li.dataset.state = state;
 
-        // Use 'state-unknown' for both 'unknown' and 'disarmed' for indicator
         const stateClass = state === 'armed' ? 'status-all-armed' : 'state-unknown';
 
         li.innerHTML = `
             <span class="device-state-indicator ${stateClass}" style="background-color: ${state === 'armed' ? '#22c55e' : '#f59e0b'};"></span>
-            <div class="device-name">${escapeHtml(item.name)} (ID: ${item.id})</div>
+            <div class="device-name">${this.escapeHtml(item.name)} (ID: ${item.id})</div>
         `;
         return li;
-    }
+    },
 
-    function updateBuildingStatus(card) {
+    updateBuildingStatus(card) {
         const items = card.querySelectorAll('.device-item');
         const statusEl = card.querySelector('.building-status');
 
@@ -291,38 +323,32 @@ document.addEventListener('DOMContentLoaded', () => {
             statusEl.textContent = 'All Disarmed';
             statusEl.className = 'building-status status-none-armed';
         }
-    }
+    },
 
-    function escapeHtml(str) {
-        return String(str || '').replace(/[&<>"']/g, s => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;',
-            '"': '&quot;', "'": '&#39;'
-        }[s]));
-    }
+    // 8. Modal Logic
+    
+    async showIgnoreSelectionModal(buildingId, action) {
+        const { 
+            modalTitle, modalItemList, ignoreModal, modalSearch, 
+            modalSelectAllBtn, modalConfirmBtn, modalCancelBtn, closeButton 
+        } = this.elements;
 
-    async function showIgnoreSelectionModal(buildingId, action) {
-        // Updated title to be more generic, as this modal is now only for setting ignore flags.
         modalTitle.textContent = `Select proevents to ignore`;
         modalItemList.innerHTML = '<div class="loader">Loading...</div>';
         ignoreModal.style.display = 'block';
         
-        // Reset modal controls
         modalSearch.value = '';
         modalSelectAllBtn.textContent = 'Select All';
 
-        const items = await apiRequest(`devices?building=${buildingId}&limit=1000`);
+        const items = await this.apiRequest(`devices?building=${buildingId}&limit=1000`);
         modalItemList.innerHTML = '';
         items.forEach(item => {
             const div = document.createElement('div');
             div.className = 'device-item';
             div.dataset.itemId = item.id;
             
-            // MODIFIED: Removed "Ignore on Arm" checkbox
-            // MODIFIED: Renamed "Ignore on Disarm" to "Ignore Alert"
-            // MODIFIED: Renamed checkbox class to "ignore-item-checkbox"
-            // MODIFIED: Updated checked status to use "item.is_ignored"
             div.innerHTML = `
-                <div class="device-name">${escapeHtml(item.name)}</div>
+                <div class="device-name">${this.escapeHtml(item.name)}</div>
                 <label class="ignore-alarm-label">
                     <input type="checkbox" class="ignore-item-checkbox" ${item.is_ignored ? 'checked' : ''} />
                     Ignore Alert
@@ -331,8 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
             modalItemList.appendChild(div);
         });
         
-        // --- Event Handlers for modal features ---
-        
         modalSearch.oninput = () => {
             const query = modalSearch.value.toLowerCase();
             const modalItems = modalItemList.querySelectorAll('.device-item');
@@ -340,16 +364,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = item.querySelector('.device-name').textContent.toLowerCase();
                 item.style.display = name.includes(query) ? 'flex' : 'none';
             });
-            modalSelectAllBtn.textContent = 'Select All'; // Reset button on search
+            modalSelectAllBtn.textContent = 'Select All';
         };
         
         modalSelectAllBtn.onclick = () => {
             const isSelectAll = modalSelectAllBtn.textContent === 'Select All';
             const modalItems = modalItemList.querySelectorAll('.device-item');
             modalItems.forEach(item => {
-                // Only toggle checkboxes for visible items
                 if (item.style.display !== 'none') {
-                    // MODIFIED: Only one checkbox to control
                     const checkbox = item.querySelector('.ignore-item-checkbox');
                     if (checkbox) checkbox.checked = isSelectAll;
                 }
@@ -357,40 +379,47 @@ document.addEventListener('DOMContentLoaded', () => {
             modalSelectAllBtn.textContent = isSelectAll ? 'Deselect All' : 'Select All';
         };
 
+        // --- **** THIS IS THE MODIFIED FUNCTION **** ---
         modalConfirmBtn.onclick = async () => {
             const selectedItems = [];
             const itemElements = modalItemList.querySelectorAll('.device-item');
             
             itemElements.forEach(itemEl => {
-                // MODIFIED: Find the single checkbox
                 const checkbox = itemEl.querySelector('.ignore-item-checkbox');
                 const itemId = parseInt(itemEl.dataset.itemId, 10);
                 
-                // MODIFIED: Send "ignore" instead of "ignore_on_disarm"
-                // "ignore_on_arm" is removed
                 selectedItems.push({
                     item_id: itemId,
                     building_frk: parseInt(buildingId),
-                    device_prk: itemId, // Using item_id as a placeholder for device_prk
+                    device_prk: itemId, 
                     ignore: checkbox.checked
                 });
             });
 
             try {
-                await apiRequest('proevents/ignore/bulk', {
+                // 1. Save the new ignore settings
+                await this.apiRequest('proevents/ignore/bulk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: selectedItems })
                 });
-                showNotification('Ignore settings updated successfully.');
-                // Refresh the building view
+                this.showNotification('Ignore settings saved. Applying changes...');
+                
+                // 2. Call the new endpoint to re-evaluate the building state
+                // This runs the backend logic using the new rules.
+                await this.apiRequest(`buildings/${buildingId}/reevaluate`, {
+                    method: 'POST'
+                });
+                this.showNotification('Changes applied successfully.');
+
+                // 3. Refresh the building view
                 const card = document.querySelector(`.building-card[data-building-id='${buildingId}']`);
                 if (card) {
                     const itemSearch = card.querySelector('.item-search');
-                    loadItemsForBuilding(card, true, itemSearch.value.trim());
+                    this.loadItemsForBuilding(card, true, itemSearch.value.trim());
                 }
             } catch (error) {
-                showNotification('Failed to update ignore settings.', true);
+                this.showNotification('Failed to apply changes.', true);
             } finally {
                 closeModal();
             }
@@ -398,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const closeModal = () => {
             ignoreModal.style.display = 'none';
-            // Clear event handlers to prevent memory leaks
             modalSearch.oninput = null;
             modalSelectAllBtn.onclick = null;
             modalConfirmBtn.onclick = null;
@@ -407,28 +435,4 @@ document.addEventListener('DOMContentLoaded', () => {
         modalCancelBtn.onclick = closeModal;
         closeButton.onclick = closeModal;
     }
-
-
-    async function loadAllBuildings() {
-        try {
-            loader.style.display = 'block';
-            allBuildings = await apiRequest('buildings');
-            buildingsContainer.innerHTML = '';
-            allBuildings.forEach(building => {
-                buildingsContainer.appendChild(createBuildingCard(building));
-            });
-        } finally {
-            loader.style.display = 'none';
-        }
-    }
-
-    async function initialize() {
-        setupBuildingSelector();
-        await loadAllBuildings();
-        // --- Panel status logic REMOVED from initialize() ---
-        // await loadPanelStatus();
-        // panelStatusToggle.addEventListener('change', togglePanelStatus);
-    }
-
-    initialize();
-});
+};

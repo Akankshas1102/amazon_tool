@@ -1,4 +1,3 @@
-# backend/services/device_service.py
 from typing import List, Dict, Any
 from config import fetch_all, fetch_one, execute_query
 from sqlite_config import get_all_building_times
@@ -114,14 +113,14 @@ def get_devices(building_id: int, search: str | None = None,
         logger.error(f"Error fetching devices: {e}")
         return []
 
-# --- ADDED: Function to set the reactive state for a building ---
+# --- MODIFIED: Function to set the reactive state for a building ---
 def set_reactive_state_for_building(building_id: int, reactive: int, 
                                     ignored_ids: list[int]) -> int:
     """
     Sets the reactive state for all proevents in a building, skipping
     any IDs in the ignored_ids list.
     """
-    action = "Arm" if reactive == 1 else "Disarm"
+    action = "Arm" if reactive == 0 else "Disarm"
     logger.info(f"Setting reactive state to {action} for building {building_id}")
 
     # Base query
@@ -141,11 +140,20 @@ def set_reactive_state_for_building(building_id: int, reactive: int,
 
     # Add ignored IDs to the query safely
     if ignored_ids:
+        logger.info('found ignoredIDs running sql query for it')
         # Create named parameters for each ignored ID
         ignored_params = {f"id_{i}": p_id for i, p_id in enumerate(ignored_ids)}
-        sql += f" AND proDevice_FRK NOT IN ({', '.join([f':{k}' for k in ignored_params.keys()])})"
+        print(ignored_params)
+        # --- THIS IS THE FIX ---
+        # Changed "proDevice_FRK" to "ProEvent_PRK" to match the primary key
+        # of ProEvent_TBL, which is what your ignored_ids list contains.
+        sql += f" AND ProEvent_PRK NOT IN ({', '.join([f':{k}' for k in ignored_params.keys()])})"
+        logger.info(f'o sqlqueries for/device/action:{sql}')
+        # --- END OF FIX ---
+        
         # Add the new parameters to the main params dict
         params.update(ignored_params)
+        
 
     try:
         affected_rows = execute_query(sql, params)

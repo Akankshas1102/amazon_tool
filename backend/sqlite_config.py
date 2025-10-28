@@ -78,15 +78,34 @@ def get_all_building_times() -> dict:
 
 # --- Ignored ProEvent Functions ---
 
+# --- THIS IS THE FIX ---
 def get_ignored_proevents() -> dict:
     """
-    UPDATED: Ensures an empty dictionary is returned if no ignored proevents are found.
+    UPDATED: Fetches all required columns, including 'building_frk',
+    so the logic in the services layer can correctly filter by building.
     """
     with get_sqlite_connection() as conn:
-        cursor = conn.execute("SELECT proevent_id, ignore_on_arm, ignore_on_disarm FROM ignored_proevents")
+        # 1. MODIFIED: Added 'building_frk' to the SELECT statement
+        cursor = conn.execute("""
+            SELECT proevent_id, building_frk, ignore_on_arm, ignore_on_disarm 
+            FROM ignored_proevents
+        """)
         rows = cursor.fetchall()
-        # Explicitly check for rows before creating the dictionary
-        return {row["proevent_id"]: {"ignore_on_arm": bool(row["ignore_on_arm"]), "ignore_on_disarm": bool(row["ignore_on_disarm"])} for row in rows} if rows else {}
+        print(rows)
+        # 2. MODIFIED: Added 'building_frk' to the returned dictionary
+        if not rows:
+            return {}
+            
+        return {
+            row["proevent_id"]: {
+                "building_frk": row["building_frk"],
+                "ignore_on_arm": bool(row["ignore_on_arm"]), 
+                "ignore_on_disarm": bool(row["ignore_on_disarm"])
+            } 
+            for row in rows
+
+        }
+# --- END OF FIX ---
 
 def set_proevent_ignore_status(proevent_id: int, building_frk: int, device_prk: int, ignore_on_arm: bool, ignore_on_disarm: bool) -> bool:
     """Set the ignore status for a specific proevent."""
